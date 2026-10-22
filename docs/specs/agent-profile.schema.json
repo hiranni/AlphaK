@@ -1,0 +1,275 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specs.alphak.local/agent-profile.schema.json",
+  "title": "AlphaK Agent Profile",
+  "description": "Configuration for one Agent that may execute a strategy in a virtual account. Tools are scoped to the strategy universe and no real order API exists.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "name",
+    "version",
+    "status",
+    "type",
+    "instructions",
+    "tools",
+    "permissions",
+    "risk_policy",
+    "memory",
+    "output_contract"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{2,63}$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "status": {
+      "enum": ["draft", "active", "paused", "archived"]
+    },
+    "type": {
+      "enum": ["rule", "llm", "hybrid"]
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "name"],
+      "properties": {
+        "provider": {
+          "enum": ["openai", "anthropic", "deepseek", "local", "custom"]
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "temperature": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 2,
+          "default": 0
+        },
+        "max_output_tokens": {
+          "type": "integer",
+          "minimum": 256,
+          "maximum": 32000,
+          "default": 2048
+        },
+        "seed": {
+          "type": ["integer", "null"],
+          "description": "Optional deterministic seed when the provider supports it."
+        },
+        "base_url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Optional custom endpoint. Credentials MUST NOT appear in the URL."
+        }
+      }
+    },
+    "instructions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["system_prompt", "objective"],
+      "properties": {
+        "system_prompt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 20000
+        },
+        "objective": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "constraints": {
+          "type": "array",
+          "maxItems": 30,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          }
+        }
+      }
+    },
+    "tools": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "market.read",
+          "fundamentals.read",
+          "indicators.compute",
+          "portfolio.read",
+          "order.propose",
+          "order.place",
+          "alert.send",
+          "backtest.read"
+        ]
+      }
+    },
+    "permissions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "can_read_market",
+        "can_read_portfolio",
+        "can_place_orders",
+        "max_order_value"
+      ],
+      "properties": {
+        "can_read_market": {
+          "type": "boolean"
+        },
+        "can_read_portfolio": {
+          "type": "boolean"
+        },
+        "can_place_orders": {
+          "type": "boolean",
+          "description": "MUST be false for advisory and shadow execution."
+        },
+        "max_order_value": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Maximum notional value per order in CNY. 0 means no additional cap."
+        },
+        "allowed_symbols": {
+          "type": "array",
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[0-9]{6}\\.(SH|SZ|BJ)$"
+          },
+          "description": "Optional narrower allowlist; MUST be a subset of the strategy universe."
+        }
+      }
+    },
+    "risk_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "max_positions",
+        "max_weight_per_symbol",
+        "max_daily_turnover_pct",
+        "max_drawdown_pct",
+        "kill_switch"
+      ],
+      "properties": {
+        "max_positions": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8
+        },
+        "max_weight_per_symbol": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1
+        },
+        "max_daily_turnover_pct": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "max_drawdown_pct": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "kill_switch": {
+          "type": "boolean",
+          "default": true,
+          "description": "When true, the platform forces no new orders."
+        },
+        "trading_window": {
+          "type": "string",
+          "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]-([01][0-9]|2[0-3]):[0-5][0-9]$",
+          "description": "Asia/Shanghai trading window, for example 09:30-15:00."
+        }
+      }
+    },
+    "memory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope", "retention_days"],
+      "properties": {
+        "scope": {
+          "enum": ["none", "session", "strategy"]
+        },
+        "retention_days": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 365
+        }
+      }
+    },
+    "output_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema"],
+      "properties": {
+        "schema": {
+          "const": "agent-response.schema.json"
+        },
+        "max_orders_per_decision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8,
+          "default": 8
+        }
+      }
+    },
+    "cost_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_tokens_per_run": {
+          "type": "integer",
+          "minimum": 256,
+          "maximum": 128000
+        },
+        "max_runs_per_day": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "max_cost_per_day_usd": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Free-form metadata; MUST NOT contain secrets."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "type": { "enum": ["llm", "hybrid"] }
+        },
+        "required": ["type"]
+      },
+      "then": {
+        "required": ["model"]
+      }
+    }
+  ]
+}

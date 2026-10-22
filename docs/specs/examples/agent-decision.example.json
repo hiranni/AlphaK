@@ -1,0 +1,82 @@
+{
+  "schema_version": "1.0.0",
+  "decision_id": "3f1c2a9e-7b4d-4c8a-9f2e-1a6b5c7d8e9f",
+  "strategy_instance_id": "inst-ma-trend-001",
+  "agent_profile_id": "agent-trend-llm",
+  "agent_profile_version": "1.0.0",
+  "as_of": "2026-10-21T15:00:00+08:00",
+  "context_hash": "3cdb0e1f51e1dc82c66efff02626d6ec94acf15bbc30d5e8fbad2fac35214137",
+  "action": "buy",
+  "orders": [
+    {
+      "symbol": "600519.SH",
+      "side": "buy",
+      "quantity": 100,
+      "order_type": "limit",
+      "limit_price": 1680.5,
+      "reason": "收盘价上穿 20 日均线，且 20 日均线高于 60 日均线；波动率处于策略允许范围。",
+      "confidence": 0.72
+    },
+    {
+      "symbol": "000858.SZ",
+      "side": "buy",
+      "quantity": 200,
+      "order_type": "limit",
+      "limit_price": 142.3,
+      "reason": "趋势信号成立，按等权目标补足至 12.5% 目标权重。",
+      "confidence": 0.68
+    }
+  ],
+  "rationale": "股票池内 2 只标的满足趋势入场条件；组合现金 1,000,000 元，按示例目标权重建仓 196,510 元，其余标的维持观察。",
+  "citations": [
+    {
+      "source": "quote_daily:600519.SH",
+      "as_of": "2026-10-21T15:00:00+08:00",
+      "field": "close"
+    },
+    {
+      "source": "indicator:ma20:600519.SH",
+      "as_of": "2026-10-21T15:00:00+08:00",
+      "field": "ma20"
+    },
+    {
+      "source": "quote_daily:000858.SZ",
+      "as_of": "2026-10-21T15:00:00+08:00",
+      "field": "close"
+    }
+  ],
+  "confidence": 0.7,
+  "risk_notes": [
+    "茅台 168,050 元（16.81%）、五粮液 28,460 元（2.85%），均低于单票 20% 上限；合计 19.65%，现金充足。",
+    "单笔最大 168,050 元，低于 max_order_value 200,000 元；单日换手 19.65%，低于 30% 上限。",
+    "若次日开盘价触及涨停，订单将按平台规则拒绝成交。"
+  ],
+  "metadata": {
+    "portfolio_context": {
+      "cash_before": 1000000,
+      "equity_before": 1000000,
+      "positions_before": [],
+      "max_positions": 8,
+      "kill_switch_engaged": false
+    },
+    "expected_validation": "accepted"
+  },
+  "tool_calls": [
+    {
+      "tool": "market.read",
+      "started_at": "2026-10-21T15:00:01+08:00",
+      "duration_ms": 42,
+      "status": "ok",
+      "args_hash": "444f38a96b106999a394782231c7cc575e8a2ad4a6910f02eaa59c1b7b182826",
+      "result_hash": "dec15c745f51806ec630f981fdd9d96cf94424869e22f7cb98e8c15dd55b42c2"
+    },
+    {
+      "tool": "indicators.compute",
+      "started_at": "2026-10-21T15:00:02+08:00",
+      "duration_ms": 87,
+      "status": "ok",
+      "args_hash": "12844c76f214fe848d4db555ce7dbf9fb62df09afde9fc7d32687415035b7623",
+      "result_hash": "a35af6a3a7e318bc321a8a16dd32c23a49606b3429fce6f171e69413ac55a3df"
+    }
+  ]
+}

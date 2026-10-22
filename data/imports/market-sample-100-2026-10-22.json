@@ -1,0 +1,946 @@
+{
+  "created_at": "2026-10-22T05:18:51.469Z",
+  "selection": "Random sample from a bounded candidate list of Shanghai/Shenzhen A-shares, excluding existing local instruments",
+  "start": "2026-10-01",
+  "end": "2026-10-22",
+  "requested": 100,
+  "imported": [
+    {
+      "symbol": "600426.SH",
+      "name": "华鲁恒升",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 19.11,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "600271.SH",
+      "name": "航天信息",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 7.57,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "600845.SH",
+      "name": "宝信软件",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 17.25,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "600029.SH",
+      "name": "南方航空",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 4.68,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "000983.SZ",
+      "name": "山西焦煤",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 6.17,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "601216.SH",
+      "name": "君正集团",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 4.5,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "002466.SZ",
+      "name": "天齐锂业",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 35.02,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "600118.SH",
+      "name": "中国卫星",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 50.44,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "600153.SH",
+      "name": "建发股份",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 8.57,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "601668.SH",
+      "name": "中国建筑",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 4.53,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "300124.SZ",
+      "name": "汇川技术",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 50.25,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "002252.SZ",
+      "name": "上海莱士",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 4.81,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "300347.SZ",
+      "name": "泰格医药",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 49.07,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "600176.SH",
+      "name": "中国巨石",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 32.71,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "603806.SH",
+      "name": "福斯特",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 12.89,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "000708.SZ",
+      "name": "中信特钢",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 12.69,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "600039.SH",
+      "name": "四川路桥",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 8.46,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "002821.SZ",
+      "name": "凯莱英",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 138.19,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "601865.SH",
+      "name": "福莱特",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 9.07,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "600340.SH",
+      "name": "*ST华幸",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 1.12,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "000625.SZ",
+      "name": "长安汽车",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 7,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "601966.SH",
+      "name": "玲珑轮胎",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 10.12,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "600109.SH",
+      "name": "国金证券",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 7.97,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "601628.SH",
+      "name": "中国人寿",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 33.67,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "601939.SH",
+      "name": "建设银行",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 11.64,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "002074.SZ",
+      "name": "国轩高科",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 25.62,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "600732.SH",
+      "name": "爱旭股份",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 11.56,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "000069.SZ",
+      "name": "华侨城A",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 1.71,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "300529.SZ",
+      "name": "健帆生物",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 14.99,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "000963.SZ",
+      "name": "华东医药",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 26.08,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "600016.SH",
+      "name": "民生银行",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 3.43,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "000063.SZ",
+      "name": "中兴通讯",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 27.28,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "601012.SH",
+      "name": "隆基绿能",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 11.12,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "603195.SH",
+      "name": "公牛集团",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 37.01,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "002714.SZ",
+      "name": "牧原股份",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 41.62,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "601788.SH",
+      "name": "光大证券",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 13.38,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "600879.SH",
+      "name": "航天电子",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 12.85,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "002223.SZ",
+      "name": "鱼跃医疗",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 25.12,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "601872.SH",
+      "name": "招商轮船",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 16.33,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "600660.SH",
+      "name": "福耀玻璃",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 51.32,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "600066.SH",
+      "name": "宇通客车",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 27.49,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "000338.SZ",
+      "name": "潍柴动力",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 21.08,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "600867.SH",
+      "name": "通化东宝",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 7.65,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "000876.SZ",
+      "name": "新希望",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 6.8,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "000725.SZ",
+      "name": "京东方A",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 4.84,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "002028.SZ",
+      "name": "思源电气",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 108.39,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "000425.SZ",
+      "name": "徐工机械",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 6.91,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "603833.SH",
+      "name": "欧派家居",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 30.75,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "601066.SH",
+      "name": "中信建投",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 22.54,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "600548.SH",
+      "name": "深高速",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 8.31,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "300661.SZ",
+      "name": "圣邦股份",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 86.6,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "600025.SH",
+      "name": "华能水电",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 10.27,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "601607.SH",
+      "name": "上海医药",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 16.22,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "603259.SH",
+      "name": "药明康德",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 139.96,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "600383.SH",
+      "name": "金地集团",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 2.19,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "002230.SZ",
+      "name": "科大讯飞",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 36.87,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "601857.SH",
+      "name": "中国石油",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 12.6,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "600522.SH",
+      "name": "中天科技",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 27.5,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "000800.SZ",
+      "name": "一汽解放",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 5.69,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "600096.SH",
+      "name": "云天化",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 26.15,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "601169.SH",
+      "name": "北京银行",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 5.52,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "300316.SZ",
+      "name": "晶盛机电",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 32.42,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "600583.SH",
+      "name": "海油工程",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 6.21,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "600183.SH",
+      "name": "生益科技",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 111.08,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "600362.SH",
+      "name": "江西铜业",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 36.15,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "601229.SH",
+      "name": "上海银行",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 9.37,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "002027.SZ",
+      "name": "分众传媒",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 4.95,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "601601.SH",
+      "name": "中国太保",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 28.35,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "002007.SZ",
+      "name": "华兰生物",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 12.83,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "002352.SZ",
+      "name": "顺丰控股",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 30.51,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "002812.SZ",
+      "name": "恩捷股份",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 42.92,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "601077.SH",
+      "name": "渝农商行",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 7.02,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "600690.SH",
+      "name": "海尔智家",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 19.59,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "600104.SH",
+      "name": "上汽集团",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 10.45,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "603606.SH",
+      "name": "东方电缆",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 34.8,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "603160.SH",
+      "name": "汇顶科技",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 51.57,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "601186.SH",
+      "name": "中国铁建",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 6.04,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "603986.SH",
+      "name": "兆易创新",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 275.38,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "002459.SZ",
+      "name": "晶澳科技",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 6.51,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "600027.SH",
+      "name": "华电国际",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 5.14,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "600276.SH",
+      "name": "恒瑞医药",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 46.36,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "601878.SH",
+      "name": "浙商证券",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 8.85,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "002080.SZ",
+      "name": "中材科技",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 40.23,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "600369.SH",
+      "name": "西南证券",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 3.81,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "300014.SZ",
+      "name": "亿纬锂能",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 41.71,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "300454.SZ",
+      "name": "深信服",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 132.11,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "600547.SH",
+      "name": "山东黄金",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 25.47,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "600418.SH",
+      "name": "江淮汽车",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 19.44,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "600031.SH",
+      "name": "三一重工",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 17.7,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "603882.SH",
+      "name": "金域医学",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 29.73,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "601600.SH",
+      "name": "中国铝业",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 8.69,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "300628.SZ",
+      "name": "亿联网络",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 37.31,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "600460.SH",
+      "name": "士兰微",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 25.34,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "300450.SZ",
+      "name": "先导智能",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 27.7,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "601009.SH",
+      "name": "南京银行",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 11.5,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "601328.SH",
+      "name": "交通银行",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 8.25,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "600795.SH",
+      "name": "国电电力",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 5.03,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "601377.SH",
+      "name": "兴业证券",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 5.46,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "600415.SH",
+      "name": "小商品城",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 10.66,
+      "rows": 11,
+      "gap_count": 0
+    },
+    {
+      "symbol": "600809.SH",
+      "name": "山西汾酒",
+      "source": "tencent",
+      "as_of": "2026-10-22",
+      "close": 109.07,
+      "rows": 11,
+      "gap_count": 0
+    }
+  ],
+  "failed": [
+    {
+      "symbol": "688256.SH",
+      "stage": "search",
+      "error": "No exact A-share match from upstream search"
+    },
+    {
+      "symbol": "688041.SH",
+      "stage": "search",
+      "error": "No exact A-share match from upstream search"
+    },
+    {
+      "symbol": "688396.SH",
+      "stage": "search",
+      "error": "No exact A-share match from upstream search"
+    },
+    {
+      "symbol": "688169.SH",
+      "stage": "search",
+      "error": "No exact A-share match from upstream search"
+    },
+    {
+      "symbol": "688187.SH",
+      "stage": "search",
+      "error": "No exact A-share match from upstream search"
+    },
+    {
+      "symbol": "688303.SH",
+      "stage": "search",
+      "error": "No exact A-share match from upstream search"
+    },
+    {
+      "symbol": "688271.SH",
+      "stage": "search",
+      "error": "No exact A-share match from upstream search"
+    }
+  ]
+}

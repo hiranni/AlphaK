@@ -1,0 +1,21 @@
+schema_version: 1.0.0
+id: inst-ma-trend-001
+strategy_id: strat-ma-trend-001
+strategy_version: 1.0.0
+virtual_account_id: acct-demo-001
+agent_profile_id: agent-trend-llm
+agent_profile_version: 1.0.0
+mode: advisory
+fallback: hold
+allocated_cash: 1000000
+max_positions: 8
+status: running
+schedule:
+  frequency: daily
+  time: "18:30"
+  timezone: Asia/Shanghai
+approval:
+  required: true
+  approver_role: owner
+metadata:
+  note: 示例实例，仅用于验证格式，不构成投资建议。

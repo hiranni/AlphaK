@@ -1,0 +1,12 @@
+{
+  "index_catalog": [{"code":"000300.SH","name":"沪深300","market":"SH","category":"broad","status":"active"}],
+  "index_quote": [
+    {"index_code":"000300.SH","trade_date":"2026-10-20","close":3790.0,"amount":220000000000},
+    {"index_code":"000300.SH","trade_date":"2026-10-21","close":3793.0,"amount":223000000000}
+  ],
+  "index_member": [{"index_code":"000300.SH","symbol":"600519.SH","in_date":"2026-01-01","out_date":null,"weight":0.05}],
+  "sector_catalog": [{"id":1,"name":"食品饮料","sector_type":"industry","source":"mock","status":"active"}],
+  "sector_member": [{"sector_id":1,"symbol":"600519.SH","in_date":"2026-01-01","out_date":null,"weight":0.5}],
+  "daily_basic": [{"symbol":"600519.SH","trade_date":"2026-10-21","total_shares":1256000000,"float_shares":1256000000,"total_mv":1890280000000,"float_mv":1890280000000,"pe_ttm":24.76,"pb":7.52,"turnover":0.2}],
+  "company_profile": [{"symbol":"600519.SH","full_name":"贵州茅台酒股份有限公司","industry":"食品饮料","source":"mock","updated_at":"2026-10-21"}]
+}

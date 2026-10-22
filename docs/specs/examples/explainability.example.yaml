@@ -1,0 +1,27 @@
+schema_version: 1.0.0
+id: exp-inst-ma-trend-001-2026-q4
+strategy_instance_id: inst-ma-trend-001
+granularity: quarterly
+period_key: 2026-Q4
+status: available
+retention_periods: 8
+expires_at: "2028-12-31T23:59:59+08:00"
+bundle_uri: file:///var/lib/alphak/explainability/inst-ma-trend-001/2026-Q4.parquet
+included_artifacts:
+  - context_snapshot
+  - signal_values
+  - rule_trace
+  - agent_prompt
+  - agent_response
+  - tool_calls
+  - validation_trace
+  - position_snapshot
+  - order_links
+decision_count: 42
+checksum: fa15cb3d1bc15c93c956d7152ecac1be5a80bba80a5ed4e0ab9fa94e65e55bac
+size_bytes: 10485760
+pinned: false
+created_at: "2027-01-01T00:05:00+08:00"
+deleted_at: null
+metadata:
+  note: 示例回放缓存，仅用于验证格式，不含真实数据。

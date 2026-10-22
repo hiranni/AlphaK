@@ -1,0 +1,47 @@
+{
+  "action": "buy",
+  "orders": [
+    {
+      "symbol": "600519.SH",
+      "side": "buy",
+      "quantity": 100,
+      "order_type": "limit",
+      "limit_price": 1680.5,
+      "reason": "收盘价上穿 20 日均线，且 20 日均线高于 60 日均线；波动率处于策略允许范围。",
+      "confidence": 0.72
+    },
+    {
+      "symbol": "000858.SZ",
+      "side": "buy",
+      "quantity": 200,
+      "order_type": "limit",
+      "limit_price": 142.3,
+      "reason": "趋势信号成立，按等权目标补足至 12.5% 目标权重。",
+      "confidence": 0.68
+    }
+  ],
+  "rationale": "股票池内 2 只标的满足趋势入场条件；组合现金 1,000,000 元，按示例目标权重建仓 196,510 元，其余标的维持观察。",
+  "citations": [
+    {
+      "source": "quote_daily:600519.SH",
+      "as_of": "2026-10-21T15:00:00+08:00",
+      "field": "close"
+    },
+    {
+      "source": "indicator:ma20:600519.SH",
+      "as_of": "2026-10-21T15:00:00+08:00",
+      "field": "ma20"
+    },
+    {
+      "source": "quote_daily:000858.SZ",
+      "as_of": "2026-10-21T15:00:00+08:00",
+      "field": "close"
+    }
+  ],
+  "confidence": 0.7,
+  "risk_notes": [
+    "茅台 168,050 元（16.81%）、五粮液 28,460 元（2.85%），均低于单票 20% 上限；合计 19.65%，现金充足。",
+    "单笔最大 168,050 元，低于 max_order_value 200,000 元；单日换手 19.65%，低于 30% 上限。",
+    "若次日开盘价触及涨停，订单将按平台规则拒绝成交。"
+  ]
+}

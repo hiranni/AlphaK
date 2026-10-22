@@ -1,0 +1,11 @@
+.DS_Store
+.env
+target/
+node_modules/
+dist/
+*.db
+*.db-shm
+*.db-wal
+backups/
+test-results/
+playwright-report/

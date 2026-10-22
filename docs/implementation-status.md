@@ -1,0 +1,48 @@
+# AlphaK MVP · Implementation Status
+
+| Field | Value |
+| --- | --- |
+| Date | 2026-10-21 |
+| Change | `alphak-platform-mvp` |
+| Progress | 100 / 111 tasks |
+| Demo data | Yes — 13 A-share instruments, 260 synthetic trading days |
+
+## Implemented
+
+- Rust/Axum API with SQLite (rusqlite), unified `{ code, message, data, request_id }` envelope.
+- Endpoints: health, market overview, search, stock detail, bars + MA/EMA/BOLL/MACD/KDJ/RSI, fundamentals, company profile, daily basic, index/sector detail, watchlists, settings, data jobs, quality.
+- Deterministic demo seed: instruments, calendar, 260 daily bars, daily basic, financial reports/indicators, company profiles, indices/members, sectors/members, watchlist, quality/jobs.
+- React/Vite pages: market dashboard, stock research, index/sector detail, watchlist, data admin, settings, 404.
+- Hallmark “Paper Ledger” design system: `tokens.css`, editorial typography, responsive 320–1440, no horizontal page overflow.
+- Watchlist: groups, add/remove, note, CSV import/export, polling; settings: theme/up-color/default home/timezone/density/poll; up-color preference applies globally.
+- Backup/restore scripts with SHA-256 and SQLite integrity check.
+- Financial report immutable versions + point-in-time query (seeded correction for 600519).
+- Sync job state machine/idempotency, quality recomputation, market snapshot cache.
+- Adapter trait + offline mock fixture, symbol normalization, qfq/hfq adjustment.
+- OpenAPI 3.1 endpoint + generated TypeScript client, watchlist rename/drag reorder/refresh/field preferences.
+- Virtual scrolling for 500-row watchlists; volume moving averages and golden indicator tests.
+- Bars qfq/hfq now applied before aggregation/indicators; as_of bounds reports, indicators, valuation; board-specific limit rules; trailing 52-week window; restore validates checksum/schema and rolls back.
+- Tests: 62 Rust tests; frontend `tsc + vite build` passes; 10 Playwright E2E tests (including request-race, CSV round-trip, settings, chart sync, retry, OpenAPI contract, 500-row windowing).
+
+## Intentional deviations (reported)
+
+- Backend is **Rust + Axum** per user request, not FastAPI.
+- Frontend is **Vite + React + hand-written CSS**, not Next.js/Tailwind/shadcn (user allowed random frontend).
+- SQLite is the only database; no PostgreSQL/TimescaleDB/Redis.
+- Direct host run; no Docker. Single-process scheduler; no Redis/Worker.
+- Tencent/Eastmoney public-source clients exist for daily/snapshot/index; default UI still uses the deterministic demo seed unless a source sync is triggered.
+- OpenAPI client is generated for market overview; other endpoints remain hand-typed until the spec gains full response schemas.
+
+## Not implemented (remaining 11 tasks)
+
+- Real financial/reference adapters (3.2–3.4, 4.15), source ToS review (10.8).
+- CI (1.6), metrics/alerts (5.10), single-source failure isolation (6.6), security scan (10.7), browser matrix (11.4), final CI acceptance (11.5).
+- 1,000-row CSV import verification.
+- V1 strategy/virtual-account/Agent/replay capabilities, remote auth, and full backup UI.
+
+## Verify
+
+```bash
+cargo test --manifest-path apps/api/Cargo.toml
+cd apps/web && npm run build
+```

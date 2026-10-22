@@ -1,0 +1,187 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "AlphaK API",
+    "version": "0.1.0",
+    "description": "Local-first A-share research API. Demo data only; no trading. Envelope: {code,message,data,request_id}. Success code=0; failure code=1."
+  },
+  "servers": [
+    { "url": "http://127.0.0.1:8080" }
+  ],
+  "tags": [
+    { "name": "health" },
+    { "name": "market" },
+    { "name": "instruments" },
+    { "name": "watchlist" },
+    { "name": "admin" }
+  ],
+  "paths": {
+    "/api/v1/market/popularity": {
+      "get": {
+        "tags": ["market"],
+        "summary": "Eastmoney public popularity top 12, cached for 60 seconds",
+        "responses": {
+          "200": { "description": "Envelope data contains data (ranked symbol, name, rank, nullable close and change_pct), source, updated_at (Unix seconds), stale, error and retry_count." },
+          "502": { "description": "Popularity unavailable and no successful cache exists" }
+        }
+      }
+    },
+    "/api/v1/market/news": {
+      "get": {
+        "tags": ["market"],
+        "summary": "Sina Finance stock-market headlines, cached for 120 seconds",
+        "responses": {
+          "200": { "description": "Envelope data contains data (id, title, https url, source, published_at in Unix seconds, summary), source, updated_at (Unix seconds), stale, error and retry_count." },
+          "502": { "description": "News unavailable and no successful cache exists" }
+        }
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "tags": ["health"],
+        "summary": "Health check",
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "example": { "code": 0, "message": "ok", "data": { "status": "ok", "app": "alphak-api · 13 instruments", "database": "sqlite · connected", "last_sync": "2026-10-21", "is_demo": true }, "request_id": "uuid" } } } }
+        }
+      }
+    },
+    "/api/v1/market/overview": {
+      "get": {
+        "tags": ["market"],
+        "summary": "Market overview snapshot",
+        "parameters": [
+          { "name": "refresh", "in": "query", "schema": { "type": "boolean" }, "description": "Recompute and replace the snapshot" }
+        ],
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "example": { "code": 0, "message": "ok", "data": { "as_of": "2026-10-21", "is_trading_day": true, "indices": [], "breadth": { "advance": 7, "decline": 5, "flat": 1, "limit_up": 0, "limit_down": 0, "total_amount": 19198000000 }, "sectors": [], "source": "demo-seed", "updated_at": "2026-10-21T15:10:00+08:00", "is_demo": true }, "request_id": "uuid" } } } }
+        }
+      }
+    },
+    "/api/v1/instruments/search": {
+      "get": {
+        "tags": ["instruments"],
+        "summary": "Search one symbol by code, name, or pinyin",
+        "parameters": [
+          { "name": "q", "in": "query", "required": true, "schema": { "type": "string" }, "example": "gzmt" }
+        ],
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "example": { "code": 0, "message": "ok", "data": [{ "symbol": "600519.SH", "name": "贵州茅台", "exchange": "SH", "industry": "食品饮料", "close": 1485.57, "change_pct": -0.1 }], "request_id": "uuid" } } } },
+          "400": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/api/v1/instruments/{symbol}": {
+      "get": {
+        "tags": ["instruments"],
+        "summary": "Stock detail",
+        "parameters": [{ "name": "symbol", "in": "path", "required": true, "schema": { "type": "string" }, "example": "600519.SH" }],
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "example": { "code": 0, "message": "ok", "data": { "symbol": "600519.SH", "name": "贵州茅台", "close": 1485.57, "change_pct": -0.1, "as_of": "2026-10-21" }, "request_id": "uuid" } } } },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/v1/instruments/{symbol}/bars": {
+      "get": {
+        "tags": ["instruments"],
+        "summary": "K-line bars with indicators",
+        "parameters": [
+          { "name": "symbol", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "period", "in": "query", "schema": { "type": "string", "enum": ["1m", "5m", "15m", "30m", "60m", "daily", "weekly", "monthly"], "default": "daily" }, "description": "Minute bars use UTC epoch seconds encoded as date strings, are unadjusted, and refresh every 60 seconds." },
+          { "name": "adjust", "in": "query", "schema": { "type": "string", "enum": ["none", "qfq", "hfq"], "default": "qfq" } }
+        ],
+        "responses": { "200": { "description": "OK" }, "404": { "$ref": "#/components/responses/NotFound" } }
+      }
+    },
+    "/api/v1/instruments/{symbol}/supplement/{dataset}": {
+      "get": {
+        "tags": ["instruments"], "summary": "Real metrics, profile or financial statements with source and freshness",
+        "parameters": [{ "name": "symbol", "in": "path", "required": true, "schema": { "type": "string" } }, { "name": "dataset", "in": "path", "required": true, "schema": { "type": "string", "enum": ["metrics", "profile", "financials"] } }],
+        "responses": { "200": { "description": "Envelope data contains data, source, updated_at (epoch seconds), stale, error and retry_count. Metrics cache 60 seconds; profile and financials cache 24 hours. Missing fields remain null." }, "502": { "description": "Sources unavailable and no cached payload exists; automatic attempts stop after five failed rounds." } }
+      }
+    },
+    "/api/v1/instruments/{symbol}/supplement/retry": {
+      "post": {
+        "tags": ["instruments"], "summary": "Reset bounded supplemental and minute retry budgets, preserving cached payloads",
+        "parameters": [{ "name": "symbol", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Retry counters reset; next request refreshes data." } }
+      }
+    },
+    "/api/v1/instruments/{symbol}/fundamentals": {
+      "get": {
+        "tags": ["instruments"],
+        "summary": "Financial reports and valuation; supports point-in-time",
+        "parameters": [
+          { "name": "symbol", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "as_of", "in": "query", "schema": { "type": "string", "format": "date" }, "description": "Return only versions announced by this date" }
+        ],
+        "responses": { "200": { "description": "OK", "content": { "application/json": { "example": { "code": 0, "message": "ok", "data": { "symbol": "600519.SH", "reports": [{ "report_period": "2026-06-30", "version": 1, "announce_date": "2026-08-27" }] }, "request_id": "uuid" } } } }, "404": { "$ref": "#/components/responses/NotFound" } }
+      }
+    },
+    "/api/v1/instruments/{symbol}/profile": {
+      "get": { "tags": ["instruments"], "summary": "Company profile", "parameters": [{ "name": "symbol", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "OK" }, "404": { "$ref": "#/components/responses/NotFound" } } }
+    },
+    "/api/v1/instruments/{symbol}/daily-basic": {
+      "get": { "tags": ["instruments"], "summary": "Daily basic metrics", "parameters": [{ "name": "symbol", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "OK" }, "404": { "$ref": "#/components/responses/NotFound" } } }
+    },
+    "/api/v1/indices/{code}": {
+      "get": { "tags": ["market"], "summary": "Index detail", "parameters": [{ "name": "code", "in": "path", "required": true, "schema": { "type": "string" }, "example": "000300.SH" }], "responses": { "200": { "description": "OK" }, "404": { "$ref": "#/components/responses/NotFound" } } }
+    },
+    "/api/v1/indices/{code}/members": {
+      "get": { "tags": ["market"], "summary": "Index members", "parameters": [{ "name": "code", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "OK" } } }
+    },
+    "/api/v1/sectors": {
+      "get": { "tags": ["market"], "summary": "Sector ranking", "responses": { "200": { "description": "OK" } } }
+    },
+    "/api/v1/sectors/{id}": {
+      "get": { "tags": ["market"], "summary": "Sector detail", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "OK" }, "404": { "$ref": "#/components/responses/NotFound" } } }
+    },
+    "/api/v1/sectors/{id}/members": {
+      "get": { "tags": ["market"], "summary": "Sector members", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "OK" } } }
+    },
+    "/api/v1/watchlists": {
+      "get": { "tags": ["watchlist"], "summary": "List groups and items", "responses": { "200": { "description": "OK" } } },
+      "post": { "tags": ["watchlist"], "summary": "Create group", "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["name"], "properties": { "name": { "type": "string" } } } } } }, "responses": { "200": { "description": "OK" }, "400": { "$ref": "#/components/responses/Error" } } }
+    },
+    "/api/v1/watchlists/refresh": {
+      "post": { "tags": ["watchlist"], "summary": "Refresh quotes for all watchlist items", "responses": { "200": { "description": "OK" } } }
+    },
+    "/api/v1/watchlists/groups": {
+      "post": { "tags": ["watchlist"], "summary": "Create group", "responses": { "200": { "description": "OK" } } }
+    },
+    "/api/v1/watchlists/groups/{id}": {
+      "put": { "tags": ["watchlist"], "summary": "Rename group", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "OK" }, "404": { "$ref": "#/components/responses/NotFound" } } },
+      "delete": { "tags": ["watchlist"], "summary": "Delete group", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "OK" }, "400": { "$ref": "#/components/responses/Error" } } }
+    },
+    "/api/v1/watchlists/items": {
+      "post": { "tags": ["watchlist"], "summary": "Add item", "responses": { "200": { "description": "OK" }, "404": { "$ref": "#/components/responses/NotFound" } } }
+    },
+    "/api/v1/watchlists/items/reorder": {
+      "put": { "tags": ["watchlist"], "summary": "Reorder items in a group", "responses": { "200": { "description": "OK" }, "404": { "$ref": "#/components/responses/NotFound" } } }
+    },
+    "/api/v1/watchlists/items/{id}": {
+      "put": { "tags": ["watchlist"], "summary": "Update item note/sort", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "OK" } } },
+      "delete": { "tags": ["watchlist"], "summary": "Delete item", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "OK" } } }
+    },
+    "/api/v1/settings": {
+      "get": { "tags": ["admin"], "summary": "Read local settings", "responses": { "200": { "description": "OK" } } },
+      "put": { "tags": ["admin"], "summary": "Update local settings", "responses": { "200": { "description": "OK" } } }
+    },
+    "/api/v1/admin/data-jobs": {
+      "get": { "tags": ["admin"], "summary": "List sync jobs", "responses": { "200": { "description": "OK" } } },
+      "post": { "tags": ["admin"], "summary": "Run one sync job", "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["dataset"], "properties": { "dataset": { "type": "string", "enum": ["instruments", "quote_daily", "daily_basic", "financial_report", "index_quote", "company_profile", "market_snapshot"] } } } } } }, "responses": { "200": { "description": "OK" }, "400": { "$ref": "#/components/responses/Error" } } }
+    },
+    "/api/v1/admin/quality": {
+      "get": { "tags": ["admin"], "summary": "Recompute and read data quality", "responses": { "200": { "description": "OK" } } }
+    },
+    "/api/v1/openapi.json": {
+      "get": { "tags": ["health"], "summary": "This OpenAPI document", "responses": { "200": { "description": "OK" } } }
+    }
+  },
+  "components": {
+    "responses": {
+      "Error": { "description": "Validation error", "content": { "application/json": { "example": { "code": 1, "message": "BAD_REQUEST: unknown dataset", "data": null, "request_id": "uuid" } } } },
+      "NotFound": { "description": "Not found or not open", "content": { "application/json": { "example": { "code": 1, "message": "NOT_OPEN: 接口未开放或不存在；MVP 不包含该能力", "data": null, "request_id": "uuid" } } } }
+    }
+  }
+}

@@ -1,0 +1,77 @@
+#!/bin/sh
+# OpenSpec launcher for DeepSeek Harness.
+#
+# DSH's bash resolves `node` to v18 here, but OpenSpec 1.14 requires Node
+# >= 20.19 (its string-width dependency uses the RegExp `v` flag). Running
+# bare `openspec` therefore dies with "SyntaxError: Invalid regular
+# expression flags" before the CLI reads any argument.
+#
+# This wrapper finds a compatible Node, locates the OpenSpec CLI, and execs
+# it. Override detection with OPENSPEC_NODE and OPENSPEC_CLI when needed.
+set -eu
+
+self_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+project_root=$(CDPATH= cd -- "$self_dir/../.." && pwd)
+
+node_ok() {
+  [ -n "${1:-}" ] && [ -x "$1" ] || return 1
+  ver=$("$1" -p 'process.versions.node' 2>/dev/null) || return 1
+  major=${ver%%.*}
+  [ "$major" -ge 20 ] 2>/dev/null
+}
+
+find_node() {
+  if [ -n "${OPENSPEC_NODE:-}" ] && node_ok "$OPENSPEC_NODE"; then
+    printf '%s\n' "$OPENSPEC_NODE"
+    return 0
+  fi
+  path_node=$(command -v node 2>/dev/null || true)
+  if node_ok "$path_node"; then
+    printf '%s\n' "$path_node"
+    return 0
+  fi
+  for candidate in \
+    "$HOME"/.nvm/versions/node/v24.*/bin/node \
+    "$HOME"/.nvm/versions/node/v22.*/bin/node \
+    "$HOME"/.nvm/versions/node/v20.*/bin/node; do
+    if [ -x "$candidate" ] && node_ok "$candidate"; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
+
+node_bin=$(find_node) || {
+  echo "openspec (DSH wrapper): no Node >= 20.19 found." >&2
+  echo "Set OPENSPEC_NODE to a compatible binary, for example:" >&2
+  echo "  OPENSPEC_NODE=\"$HOME/.nvm/versions/node/v20.20.2/bin/node\" $0 \"\$@\"" >&2
+  exit 1
+}
+
+find_cli() {
+  if [ -n "${OPENSPEC_CLI:-}" ] && [ -f "$OPENSPEC_CLI" ]; then
+    printf '%s\n' "$OPENSPEC_CLI"
+    return 0
+  fi
+  for candidate in \
+    "$project_root/node_modules/@fission-ai/openspec/bin/openspec.js" \
+    "$HOME"/.nvm/versions/node/v*/lib/node_modules/@fission-ai/openspec/bin/openspec.js \
+    /usr/local/lib/node_modules/@fission-ai/openspec/bin/openspec.js \
+    /opt/homebrew/lib/node_modules/@fission-ai/openspec/bin/openspec.js; do
+    if [ -f "$candidate" ]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
+
+cli=$(find_cli) || {
+  echo "openspec (DSH wrapper): OpenSpec CLI not found." >&2
+  echo "Install it with Node 20+:" >&2
+  echo "  PATH=\"$(dirname "$node_bin"):\$PATH\" npm install -g @fission-ai/openspec" >&2
+  exit 1
+}
+
+exec "$node_bin" "$cli" "$@"

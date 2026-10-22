@@ -1,0 +1,131 @@
+{
+  "schema_version": "1.0.0",
+  "updated_at": "2026-10-21",
+  "read_order": [
+    "README.md",
+    "strategy.schema.json",
+    "strategy-instance.schema.json",
+    "agent-profile.schema.json",
+    "agent-response.schema.json",
+    "agent-decision.schema.json",
+    "explainability.schema.json",
+    "examples/strategy.example.yaml",
+    "examples/strategy-instance.example.yaml",
+    "examples/agent-profile.example.yaml",
+    "examples/agent-response.example.json",
+    "examples/agent-decision.example.json",
+    "examples/README.md",
+    "examples/explainability.example.yaml",
+    "strategy-analysis-template.md"
+  ],
+  "documents": [
+    {
+      "id": "specs-readme",
+      "path": "README.md",
+      "kind": "markdown",
+      "version": "1.0.0",
+      "title": "AlphaK Specs — Agent-Readable Contracts"
+    },
+    {
+      "id": "strategy-schema",
+      "path": "strategy.schema.json",
+      "kind": "json-schema",
+      "version": "1.0.0",
+      "title": "AlphaK Strategy Spec"
+    },
+    {
+      "id": "strategy-instance-schema",
+      "path": "strategy-instance.schema.json",
+      "kind": "json-schema",
+      "version": "1.0.0",
+      "title": "AlphaK Strategy Instance"
+    },
+    {
+      "id": "agent-profile-schema",
+      "path": "agent-profile.schema.json",
+      "kind": "json-schema",
+      "version": "1.0.0",
+      "title": "AlphaK Agent Profile"
+    },
+    {
+      "id": "agent-response-schema",
+      "path": "agent-response.schema.json",
+      "kind": "json-schema",
+      "version": "1.0.0",
+      "title": "AlphaK Agent Semantic Response"
+    },
+    {
+      "id": "agent-decision-schema",
+      "path": "agent-decision.schema.json",
+      "kind": "json-schema",
+      "version": "1.0.0",
+      "title": "AlphaK Agent Decision"
+    },
+    {
+      "id": "explainability-schema",
+      "path": "explainability.schema.json",
+      "kind": "json-schema",
+      "version": "1.0.0",
+      "title": "AlphaK Explainability Replay Bundle"
+    },
+    {
+      "id": "strategy-example",
+      "path": "examples/strategy.example.yaml",
+      "kind": "example",
+      "version": "1.0.0",
+      "title": "Strategy example"
+    },
+    {
+      "id": "strategy-instance-example",
+      "path": "examples/strategy-instance.example.yaml",
+      "kind": "example",
+      "version": "1.0.0",
+      "title": "Strategy instance example"
+    },
+    {
+      "id": "agent-profile-example",
+      "path": "examples/agent-profile.example.yaml",
+      "kind": "example",
+      "version": "1.0.0",
+      "title": "Agent profile example"
+    },
+    {
+      "id": "agent-response-example",
+      "path": "examples/agent-response.example.json",
+      "kind": "example",
+      "version": "1.0.0",
+      "title": "Agent semantic response example"
+    },
+    {
+      "id": "agent-decision-example",
+      "path": "examples/agent-decision.example.json",
+      "kind": "example",
+      "version": "1.0.0",
+      "title": "Agent decision example"
+    },
+    {
+      "id": "examples-readme",
+      "path": "examples/README.md",
+      "kind": "markdown",
+      "version": "1.0.0",
+      "title": "Examples: success vs business rejection"
+    },
+    {
+      "id": "explainability-example",
+      "path": "examples/explainability.example.yaml",
+      "kind": "example",
+      "version": "1.0.0",
+      "title": "Explainability bundle example"
+    },
+    {
+      "id": "strategy-analysis-template",
+      "path": "strategy-analysis-template.md",
+      "kind": "markdown-template",
+      "version": "1.0.0",
+      "title": "Strategy analysis template"
+    }
+  ],
+  "invariants": [
+    "INV-01..INV-16 in README.md"
+  ]
+}

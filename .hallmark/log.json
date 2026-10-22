@@ -1,0 +1,17 @@
+[
+  {
+    "date": "2026-10-21",
+    "macrostructure": "Workbench",
+    "theme": "Paper Ledger",
+    "enrichment": "none",
+    "brief": "AlphaK A-share research MVP — editorial workbench, demo data"
+  },
+  {
+    "date": "2026-10-22",
+    "scope": "app",
+    "macrostructure": "Workbench",
+    "theme": "Market Terminal",
+    "enrichment": "none",
+    "brief": "Compact data-first A-share terminal, cool navy and blue, short page titles; minute chart controls and real metrics/company/financial data retain the terminal layout"
+  }
+]

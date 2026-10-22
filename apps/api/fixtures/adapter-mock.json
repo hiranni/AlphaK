@@ -1,0 +1,15 @@
+{
+  "calendar": ["2026-10-19", "2026-10-20", "2026-10-21"],
+  "instruments": [
+    {"symbol":"600519.SH","name":"贵州茅台","pinyin":"gzmt","exchange":"SH","board":"主板","industry":"食品饮料","list_date":"2001-08-27","status":"active"},
+    {"symbol":"000858.SZ","name":"五粮液","pinyin":"wly","exchange":"SZ","board":"主板","industry":"食品饮料","list_date":"1998-04-27","status":"active"}
+  ],
+  "bars": [
+    {"symbol":"600519.SH","trade_date":"2026-10-19","open":1480.0,"high":1490.0,"low":1470.0,"close":1485.0,"volume":100000,"amount":148500000,"adj_factor":1.0},
+    {"symbol":"600519.SH","trade_date":"2026-10-20","open":1485.0,"high":1500.0,"low":1480.0,"close":1495.0,"volume":0,"amount":0,"adj_factor":1.0},
+    {"symbol":"600519.SH","trade_date":"2026-10-21","open":1495.0,"high":1510.0,"low":1490.0,"close":1505.0,"volume":120000,"amount":180600000,"adj_factor":1.01}
+  ],
+  "financials": [
+    {"symbol":"600519.SH","report_period":"2026-06-30","announce_date":"2026-08-27","statement_type":"quarterly","version":1,"revenue":100000000,"net_profit":20000000,"total_assets":300000000,"total_liabilities":100000000,"equity":200000000,"operating_cash_flow":22000000}
+  ]
+}

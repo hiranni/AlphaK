@@ -1,0 +1,154 @@
+schema_version: 1.0.0
+id: strat-ma-trend-001
+name: 均线趋势示例策略
+version: 1.0.0
+status: validated
+description: >-
+  在 8 只大盘股中，当收盘价站上 20 日均线且 20 日均线高于 60 日均线时建仓；
+  跌破 20 日均线或触发止损时退出。仅用于演示 Agent 可读策略格式，不构成投资建议。
+
+characteristics:
+  style: trend
+  horizon: daily
+  risk_level: medium
+  typical_holding_days: 20
+  expected_turnover_pct: 0.3
+  market_regime:
+    - trending
+    - volatile
+  tags:
+    - ma
+    - large-cap
+
+objective:
+  type: excess_return
+  benchmark: 000300.SH
+  horizon: monthly
+  target: 0.08
+
+universe:
+  mode: static
+  symbols:
+    - 600519.SH
+    - 000858.SZ
+    - 601318.SH
+    - 600036.SH
+    - 000333.SZ
+    - 601166.SH
+    - 600900.SH
+    - 000651.SZ
+  max_symbols: 8
+  exclude_st: true
+
+data_requirements:
+  frequency: daily
+  lookback_days: 250
+  fields:
+    - open
+    - high
+    - low
+    - close
+    - volume
+    - amount
+    - pe_ttm
+    - roe
+  point_in_time: true
+
+signals:
+  - name: ma20
+    expression: SMA(close, 20)
+    inputs:
+      - close
+    output: number
+    description: 20 日简单移动平均线
+  - name: ma60
+    expression: SMA(close, 60)
+    inputs:
+      - close
+    output: number
+    description: 60 日简单移动平均线
+  - name: trend_up
+    expression: close > ma20 AND ma20 > ma60
+    inputs:
+      - close
+      - ma20
+      - ma60
+    output: boolean
+    description: 收盘价在 20 日线上方，且 20 日线高于 60 日线
+
+rules:
+  entry:
+    - when: trend_up AND CROSS(close, ma20)
+      action: buy
+      weight: 0.125
+      priority: 80
+      description: 趋势向上且收盘价上穿 20 日线时买入一份
+  exit:
+    - when: close < ma20
+      action: sell
+      weight: 1.0
+      priority: 90
+      description: 收盘价跌破 20 日线时清仓
+    - when: close < REF(close, 1) * 0.92
+      action: reduce
+      weight: 0.5
+      priority: 95
+      description: 单日急跌超过 8% 时减半
+
+position_sizing:
+  method: equal_weight
+  max_positions: 8
+  max_weight_per_symbol: 0.2
+  cash_buffer: 0.05
+
+risk:
+  stop_loss_pct: 0.08
+  take_profit_pct: null
+  max_drawdown_pct: 0.15
+  max_daily_turnover_pct: 0.3
+  max_order_value: 50000
+
+execution:
+  frequency: daily
+  order_type: limit
+  fill_timing: next_open
+  fees:
+    commission_bps: 2.5
+    stamp_duty_bps: 5
+    transfer_fee_bps: 0.1
+    min_commission: 5
+  slippage_bps: 5
+
+evaluation:
+  metrics:
+    - annualized_return
+    - max_drawdown
+    - sharpe
+    - win_rate
+    - turnover
+  min_track_days: 120
+
+explainability:
+  cache_granularity: quarterly
+  retention_periods: 8
+  include:
+    - context_snapshot
+    - signal_values
+    - rule_trace
+    - agent_prompt
+    - agent_response
+    - tool_calls
+    - validation_trace
+    - position_snapshot
+    - order_links
+  replay_modes:
+    - decision
+    - period
+  redact_secrets: true
+
+metadata:
+  author: AlphaK
+  tags:
+    - trend
+    - example
+  notes: 示例数据，仅用于验证格式，不构成投资建议。

@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specs.alphak.local/strategy-instance.schema.json",
+  "title": "AlphaK Strategy Instance",
+  "description": "Binds one immutable strategy version and one immutable Agent profile version to a virtual account sub-ledger. The instance owns execution mode, capital allocation, and the 8-symbol cap.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "strategy_id",
+    "strategy_version",
+    "virtual_account_id",
+    "agent_profile_id",
+    "agent_profile_version",
+    "mode",
+    "fallback",
+    "allocated_cash",
+    "max_positions",
+    "status"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{2,63}$"
+    },
+    "strategy_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{2,63}$"
+    },
+    "strategy_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "virtual_account_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{2,63}$"
+    },
+    "agent_profile_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{2,63}$"
+    },
+    "agent_profile_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "mode": {
+      "enum": ["advisory", "auto", "shadow"]
+    },
+    "fallback": {
+      "enum": ["hold", "skip", "rule_based"]
+    },
+    "allocated_cash": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Cash allocated from the virtual account to this instance's sub-ledger, in CNY."
+    },
+    "max_positions": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 8
+    },
+    "status": {
+      "enum": ["draft", "running", "paused", "stopped", "archived"]
+    },
+    "schedule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["frequency", "timezone"],
+      "properties": {
+        "frequency": {
+          "enum": ["manual", "daily", "weekly"]
+        },
+        "time": {
+          "type": "string",
+          "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+          "description": "Local time in Asia/Shanghai. Required for daily/weekly."
+        },
+        "timezone": {
+          "const": "Asia/Shanghai"
+        }
+      }
+    },
+    "approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "required": {
+          "type": "boolean",
+          "default": true
+        },
+        "approver_role": {
+          "enum": ["owner", "admin", "any"],
+          "default": "owner"
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Free-form metadata; MUST NOT contain secrets."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "mode": { "enum": ["advisory", "shadow"] }
+        },
+        "required": ["mode"]
+      },
+      "then": {
+        "required": ["approval"],
+        "properties": {
+          "approval": {
+            "properties": {
+              "required": { "const": true }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "schedule": {
+            "properties": {
+              "frequency": { "enum": ["daily", "weekly"] }
+            },
+            "required": ["frequency"]
+          }
+        },
+        "required": ["schedule"]
+      },
+      "then": {
+        "properties": {
+          "schedule": {
+            "required": ["time"]
+          }
+        }
+      }
+    }
+  ]
+}

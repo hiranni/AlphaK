@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="230 275 800 690" fill="none" role="img" aria-labelledby="title">
+  <title id="title">AlphaK</title>
+  <defs>
+    <linearGradient id="inner" x1="368" y1="479" x2="541" y2="857" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#780019"/>
+      <stop offset=".48" stop-color="#d60820"/>
+      <stop offset="1" stop-color="#ff494e"/>
+    </linearGradient>
+    <linearGradient id="tail" x1="739" y1="659" x2="944" y2="935" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#780019"/>
+      <stop offset=".55" stop-color="#d60820"/>
+      <stop offset="1" stop-color="#ff343c"/>
+    </linearGradient>
+    <linearGradient id="arch" x1="300" y1="690" x2="751" y2="470" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#df001c"/>
+      <stop offset=".47" stop-color="#fa1027"/>
+      <stop offset=".7" stop-color="#ff5359"/>
+      <stop offset="1" stop-color="#ed0920"/>
+    </linearGradient>
+    <linearGradient id="ribbon" x1="443" y1="959" x2="856" y2="494" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#790017"/>
+      <stop offset=".42" stop-color="#d6081f"/>
+      <stop offset=".73" stop-color="#ff323b"/>
+      <stop offset="1" stop-color="#f50b23"/>
+    </linearGradient>
+    <linearGradient id="candle" x1="1001" y1="370" x2="915" y2="599" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ff3e45"/>
+      <stop offset=".55" stop-color="#f71128"/>
+      <stop offset="1" stop-color="#b8001b"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#inner)" d="M534 464C441 458 339 494 286 574C245 637 240 749 290 832C341 887 436 883 535 835C446 870 377 802 373 716C366 611 437 493 534 464Z"/>
+  <path fill="url(#tail)" d="M680 581C705 620 716 660 727 700C746 778 784 858 844 904C899 951 951 940 996 890C923 885 863 824 829 747C804 693 791 623 766 575L680 581Z"/>
+  <path fill="url(#arch)" d="M253 695C251 572 376 422 505 396C626 370 733 443 790 554L703 671C677 555 615 471 534 464C419 452 281 515 253 695Z"/>
+  <path fill="url(#ribbon)" d="M290 832C355 944 461 963 558 925C681 878 778 735 884 583V433C776 570 662 738 561 814C465 883 354 892 290 832Z"/>
+  <path fill="url(#candle)" d="M947 304A11 11 0 0 1 969 304V368H994A14 14 0 0 1 1008 382V550A14 14 0 0 1 994 564H969V635A11 11 0 0 1 947 635V564H919A14 14 0 0 1 905 550V382A14 14 0 0 1 919 368H947V304Z"/>
+</svg>
