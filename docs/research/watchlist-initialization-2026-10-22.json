@@ -1,0 +1,443 @@
+{
+  "initialized_at": "2026-10-22T15:43:01.211886+00:00",
+  "backup": "/Users/ryan/.alphak/backups/alphak-before-watchlist-reset-20261022-234301.db",
+  "groups": [
+    {
+      "id": "group-f40875f2-71b5-4da4-827c-754e2e7e3d80",
+      "name": "科技硬件与半导体",
+      "members": [
+        {
+          "name": "沪电股份",
+          "symbol": "002463.SZ"
+        },
+        {
+          "name": "长电科技",
+          "symbol": "600584.SH"
+        },
+        {
+          "name": "通富微电",
+          "symbol": "002156.SZ"
+        },
+        {
+          "name": "景旺电子",
+          "symbol": "603228.SH"
+        },
+        {
+          "name": "领益智造",
+          "symbol": "002600.SZ"
+        },
+        {
+          "name": "东材科技",
+          "symbol": "601208.SH"
+        }
+      ]
+    },
+    {
+      "id": "group-f41dca5f-5c04-4bd7-8d01-e758800c96cb",
+      "name": "汽车零部件与高端制造",
+      "members": [
+        {
+          "name": "浙江荣泰",
+          "symbol": "603119.SH"
+        },
+        {
+          "name": "德赛西威",
+          "symbol": "002920.SZ"
+        },
+        {
+          "name": "许继电气",
+          "symbol": "000400.SZ"
+        },
+        {
+          "name": "柳工",
+          "symbol": "000528.SZ"
+        },
+        {
+          "name": "万向钱潮",
+          "symbol": "000559.SZ"
+        },
+        {
+          "name": "大丰实业",
+          "symbol": "603081.SH"
+        },
+        {
+          "name": "领益智造",
+          "symbol": "002600.SZ"
+        },
+        {
+          "name": "宁波韵升",
+          "symbol": "600366.SH"
+        },
+        {
+          "name": "南方精工",
+          "symbol": "002553.SZ"
+        },
+        {
+          "name": "拓普集团",
+          "symbol": "601689.SH"
+        },
+        {
+          "name": "宁波华翔",
+          "symbol": "002048.SZ"
+        }
+      ]
+    },
+    {
+      "id": "group-29660a6a-aa21-42f2-8a93-ba64caae24cf",
+      "name": "能源电力与资源材料",
+      "members": [
+        {
+          "name": "大唐发电",
+          "symbol": "601991.SH"
+        },
+        {
+          "name": "华银电力",
+          "symbol": "600744.SH"
+        },
+        {
+          "name": "山东墨龙",
+          "symbol": "002490.SZ"
+        },
+        {
+          "name": "许继电气",
+          "symbol": "000400.SZ"
+        },
+        {
+          "name": "宁波韵升",
+          "symbol": "600366.SH"
+        },
+        {
+          "name": "东方锆业",
+          "symbol": "002167.SZ"
+        },
+        {
+          "name": "中国巨石",
+          "symbol": "600176.SH"
+        },
+        {
+          "name": "中钨高新",
+          "symbol": "000657.SZ"
+        },
+        {
+          "name": "东材科技",
+          "symbol": "601208.SH"
+        },
+        {
+          "name": "江西铜业",
+          "symbol": "600362.SH"
+        },
+        {
+          "name": "西部黄金",
+          "symbol": "601069.SH"
+        }
+      ]
+    },
+    {
+      "id": "group-f7e9a015-c2c8-44f8-a56d-fc424a208323",
+      "name": "医药消费与传媒",
+      "members": [
+        {
+          "name": "药明康德",
+          "symbol": "603259.SH"
+        },
+        {
+          "name": "千金药业",
+          "symbol": "600479.SH"
+        },
+        {
+          "name": "百花医药",
+          "symbol": "600721.SH"
+        },
+        {
+          "name": "东百集团",
+          "symbol": "600693.SH"
+        },
+        {
+          "name": "三七互娱",
+          "symbol": "002555.SZ"
+        },
+        {
+          "name": "中国中免",
+          "symbol": "601888.SH"
+        },
+        {
+          "name": "中国出版",
+          "symbol": "601949.SH"
+        },
+        {
+          "name": "富春染织",
+          "symbol": "605189.SH"
+        },
+        {
+          "name": "中粮糖业",
+          "symbol": "600737.SH"
+        },
+        {
+          "name": "大丰实业",
+          "symbol": "603081.SH"
+        }
+      ]
+    },
+    {
+      "id": "group-6f627881-7312-47e8-a660-3c2cc971e2b7",
+      "name": "金融交通与稳健观察",
+      "members": [
+        {
+          "name": "农业银行",
+          "symbol": "601288.SH"
+        },
+        {
+          "name": "皖通高速",
+          "symbol": "600012.SH"
+        },
+        {
+          "name": "中谷物流",
+          "symbol": "603565.SH"
+        },
+        {
+          "name": "锦江航运",
+          "symbol": "601083.SH"
+        },
+        {
+          "name": "大唐发电",
+          "symbol": "601991.SH"
+        },
+        {
+          "name": "中粮糖业",
+          "symbol": "600737.SH"
+        },
+        {
+          "name": "中国巨石",
+          "symbol": "600176.SH"
+        }
+      ]
+    }
+  ],
+  "unique_symbols": 37,
+  "memberships": 45,
+  "classification_note": "研究分类，非实时热点、质量评级或投资建议；稳健观察是研究方向，不代表低风险。",
+  "history_check": [
+    {
+      "symbol": "000400.SZ",
+      "name": "许继电气",
+      "real_bars": 243,
+      "latest": "2026-10-22"
+    },
+    {
+      "symbol": "000528.SZ",
+      "name": "柳工",
+      "real_bars": 243,
+      "latest": "2026-10-22"
+    },
+    {
+      "symbol": "000559.SZ",
+      "name": "万向钱潮",
+      "real_bars": 243,
+      "latest": "2026-10-22"
+    },
+    {
+      "symbol": "000657.SZ",
+      "name": "中钨高新",
+      "real_bars": 243,
+      "latest": "2026-10-22"
+    },
+    {
+      "symbol": "002048.SZ",
+      "name": "宁波华翔",
+      "real_bars": 243,
+      "latest": "2026-10-22"
+    },
+    {
+      "symbol": "002156.SZ",
+      "name": "通富微电",
+      "real_bars": 243,
+      "latest": "2026-10-22"
+    },
+    {
+      "symbol": "002167.SZ",
+      "name": "东方锆业",
+      "real_bars": 243,
+      "latest": "2026-10-22"
+    },
+    {
+      "symbol": "002463.SZ",
+      "name": "沪电股份",
+      "real_bars": 243,
+      "latest": "2026-10-22"
+    },
+    {
+      "symbol": "002490.SZ",
+      "name": "山东墨龙",
+      "real_bars": 243,
+      "latest": "2026-10-22"
+    },
+    {
+      "symbol": "002553.SZ",
+      "name": "南方精工",
+      "real_bars": 243,
+      "latest": "2026-10-22"
+    },
+    {
+      "symbol": "002555.SZ",
+      "name": "三七互娱",
+      "real_bars": 243,
+      "latest": "2026-10-22"
+    },
+    {
+      "symbol": "002600.SZ",
+      "name": "领益智造",
+      "real_bars": 243,
+      "latest": "2026-10-22"
+    },
+    {
+      "symbol": "002920.SZ",
+      "name": "德赛西威",
+      "real_bars": 243,
+      "latest": "2026-10-22"
+    },
+    {
+      "symbol": "600012.SH",
+      "name": "皖通高速",
+      "real_bars": 243,
+      "latest": "2026-10-22"
+    },
+    {
+      "symbol": "600176.SH",
+      "name": "中国巨石",
+      "real_bars": 243,
+      "latest": "2026-10-22"
+    },
+    {
+      "symbol": "600362.SH",
+      "name": "江西铜业",
+      "real_bars": 243,
+      "latest": "2026-10-22"
+    },
+    {
+      "symbol": "600366.SH",
+      "name": "宁波韵升",
+      "real_bars": 243,
+      "latest": "2026-10-22"
+    },
+    {
+      "symbol": "600479.SH",
+      "name": "千金药业",
+      "real_bars": 243,
+      "latest": "2026-10-22"
+    },
+    {
+      "symbol": "600584.SH",
+      "name": "长电科技",
+      "real_bars": 243,
+      "latest": "2026-10-22"
+    },
+    {
+      "symbol": "600693.SH",
+      "name": "东百集团",
+      "real_bars": 243,
+      "latest": "2026-10-22"
+    },
+    {
+      "symbol": "600721.SH",
+      "name": "百花医药",
+      "real_bars": 233,
+      "latest": "2026-10-22"
+    },
+    {
+      "symbol": "600737.SH",
+      "name": "中粮糖业",
+      "real_bars": 243,
+      "latest": "2026-10-22"
+    },
+    {
+      "symbol": "600744.SH",
+      "name": "华银电力",
+      "real_bars": 243,
+      "latest": "2026-10-22"
+    },
+    {
+      "symbol": "601069.SH",
+      "name": "西部黄金",
+      "real_bars": 243,
+      "latest": "2026-10-22"
+    },
+    {
+      "symbol": "601083.SH",
+      "name": "锦江航运",
+      "real_bars": 243,
+      "latest": "2026-10-22"
+    },
+    {
+      "symbol": "601208.SH",
+      "name": "东材科技",
+      "real_bars": 243,
+      "latest": "2026-10-22"
+    },
+    {
+      "symbol": "601288.SH",
+      "name": "农业银行",
+      "real_bars": 243,
+      "latest": "2026-10-22"
+    },
+    {
+      "symbol": "601689.SH",
+      "name": "拓普集团",
+      "real_bars": 243,
+      "latest": "2026-10-22"
+    },
+    {
+      "symbol": "601888.SH",
+      "name": "中国中免",
+      "real_bars": 243,
+      "latest": "2026-10-22"
+    },
+    {
+      "symbol": "601949.SH",
+      "name": "中国出版",
+      "real_bars": 243,
+      "latest": "2026-10-22"
+    },
+    {
+      "symbol": "601991.SH",
+      "name": "大唐发电",
+      "real_bars": 243,
+      "latest": "2026-10-22"
+    },
+    {
+      "symbol": "603081.SH",
+      "name": "大丰实业",
+      "real_bars": 243,
+      "latest": "2026-10-22"
+    },
+    {
+      "symbol": "603119.SH",
+      "name": "浙江荣泰",
+      "real_bars": 243,
+      "latest": "2026-10-22"
+    },
+    {
+      "symbol": "603228.SH",
+      "name": "景旺电子",
+      "real_bars": 243,
+      "latest": "2026-10-22"
+    },
+    {
+      "symbol": "603259.SH",
+      "name": "药明康德",
+      "real_bars": 243,
+      "latest": "2026-10-22"
+    },
+    {
+      "symbol": "603565.SH",
+      "name": "中谷物流",
+      "real_bars": 243,
+      "latest": "2026-10-22"
+    },
+    {
+      "symbol": "605189.SH",
+      "name": "富春染织",
+      "real_bars": 243,
+      "latest": "2026-10-22"
+    }
+  ]
+}

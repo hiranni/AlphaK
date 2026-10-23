@@ -1,5 +1,19 @@
 [
   {
+    "date": "2026-10-22",
+    "macrostructure": "Workbench",
+    "theme": "Market Terminal",
+    "enrichment": "nested module navigation",
+    "brief": "量化与实盘主导航后置，二级导航与真实待接入状态；回测、样本外与模拟表现分离"
+  },
+  {
+    "date": "2026-10-22",
+    "macrostructure": "Workbench",
+    "theme": "Market Terminal",
+    "enrichment": "normalized breadth bars",
+    "brief": "大盘与本地样本双行涨跌分布，真实聚合统计与独立时间标签"
+  },
+  {
     "date": "2026-10-21",
     "macrostructure": "Workbench",
     "theme": "Paper Ledger",

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Database, Play, RefreshCw, ShieldCheck } from "lucide-react";
+import { Database, Play, RefreshCw, ShieldCheck, Radio, ListChecks, FlaskConical } from "lucide-react";
 import { api } from "../api";
 import type { DataJob, QualityReport, SourceStatus } from "../types";
 import { ErrorState, Loading } from "../components/States";
@@ -14,6 +14,8 @@ const labels: Record<string, string> = {
   company_profile: "公司资料",
   sector_catalog: "板块成员",
 };
+
+const displayLabels: Record<string, string> = { ...labels, snapshot: "行情快照", market_snapshot: "市场快照" };
 
 const statusLabels: Record<string, string> = {
   succeeded: "已完成",
@@ -110,7 +112,7 @@ export function DataAdmin() {
       {sources ? (
         <section className="panel source-panel">
           <div className="panel-head">
-            <div><span className="eyebrow mono">SOURCES</span><h2>行情来源</h2></div>
+            <div><span className="eyebrow mono">SOURCES</span><h2><Radio size={16} aria-hidden="true" />行情来源</h2></div>
             <span className={`stamp ${sources.freshness.some((item) => item.status !== "fresh") ? "stamp-warn" : ""}`}>
               {sources.freshness.length === 0 ? "未同步" : sources.freshness.some((item) => item.status !== "fresh") ? "部分过期" : "数据新鲜"}
             </span>
@@ -119,7 +121,7 @@ export function DataAdmin() {
             {sources.health.map((source) => (
               <div className={`source-card ${source.available ? "" : "source-card-down"}`} key={source.source}>
                 <div className="source-card-head">
-                  <span>{source.source === "tencent" ? "腾讯" : source.source === "sina" ? "新浪财经" : "东方财富"}</span>
+                  <span>{source.source === "tencent" ? "腾讯" : source.source === "sina" ? "新浪财经" : source.source === "eastmoney" ? "东方财富" : source.source}</span>
                   <span className={`status-pill ${source.available ? "status-succeeded" : "status-failed"}`}>
                     {source.available ? "可用" : `冷却 ${source.cooldown_seconds}s`}
                   </span>
@@ -128,15 +130,15 @@ export function DataAdmin() {
               </div>
             ))}
           </div>
-          <div className="freshness-list">
+          <div className="freshness-list"><div className="freshness-row freshness-labels" aria-hidden="true"><span>数据集</span><span>状态</span><span>最后成功</span><span>来源</span></div>
             {sources.freshness.map((item) => (
               <div className="freshness-row" key={item.dataset}>
-                <span className="mono">{labels[item.dataset] ?? item.dataset}</span>
+                <span className="mono">{displayLabels[item.dataset] ?? item.dataset}</span>
                 <span className={`status-pill status-${item.status === "fresh" ? "succeeded" : item.status === "partial" ? "running" : "failed"}`}>
                   {item.status === "fresh" ? "新鲜" : item.status === "partial" ? "部分成功" : "已过期"}
                 </span>
-                <span className="mono muted">{item.last_success_at ? dateLabel(item.last_success_at) : "无成功记录"}</span>
-                {item.last_source ? <span className="mono muted">来源 {item.last_source}</span> : null}
+                <span className="mono muted freshness-time">{item.last_success_at ? dateLabel(item.last_success_at) : "无成功记录"}</span>
+                <span className="mono muted freshness-source">{item.last_source ? `来源 ${item.last_source}` : "来源 —"}</span>
               </div>
             ))}
           </div>
@@ -146,8 +148,8 @@ export function DataAdmin() {
 
       <section className="panel run-panel">
         <div className="panel-head">
-          <div><span className="eyebrow mono">PUBLIC SOURCES</span><h2>公开源同步</h2></div>
-          <Database size={17} />
+          <div><span className="eyebrow mono">PUBLIC SOURCES</span><h2><Database size={16} aria-hidden="true" />公开源同步</h2></div>
+
         </div>
         <p className="panel-footnote">按数据集主备；第一轮为小样本。失败时保留最后成功数据，不生成 mock。</p>
         {sourceNotice ? <p className="inline-notice" role="status">{sourceNotice}</p> : null}
@@ -167,16 +169,16 @@ export function DataAdmin() {
       </section>
 
       <div className="data-grid">
-        <section className="panel">
+        <section className="panel quality-panel">
           <div className="panel-head">
-            <div><span className="eyebrow mono">COVERAGE</span><h2>数据体检</h2></div>
-            <ShieldCheck size={17} />
+            <div><span className="eyebrow mono">COVERAGE</span><h2><ShieldCheck size={16} aria-hidden="true" />数据体检</h2></div>
+
           </div>
           <div className="quality-list">
             {quality.map((item) => (
               <div className="quality-row" key={item.dataset}>
                 <div className="quality-head">
-                  <span>{labels[item.dataset] ?? item.dataset}</span>
+                  <span>{displayLabels[item.dataset] ?? item.dataset}</span>
                   <span className="mono">{(item.coverage * 100).toFixed(1)}%</span>
                 </div>
                 <div className="quality-track"><span style={{ width: `${Math.min(item.coverage * 100, 100)}%` }} /></div>
@@ -191,22 +193,22 @@ export function DataAdmin() {
           </div>
         </section>
 
-        <section className="panel">
+        <section className="panel jobs-panel">
           <div className="panel-head">
-            <div><span className="eyebrow mono">JOBS</span><h2>同步任务</h2></div>
+            <div><span className="eyebrow mono">JOBS</span><h2><ListChecks size={16} aria-hidden="true" />同步任务</h2></div>
             <button className="btn btn-ghost" onClick={load}><RefreshCw size={14} /> 刷新</button>
           </div>
           {notice ? <p className="inline-notice" role="status">{notice}</p> : null}
           <div className="table-wrap">
-            <table className="data-table">
+            <table className="data-table jobs-table"><colgroup><col style={{ width: 150 }} /><col style={{ width: 88 }} /><col style={{ width: 72 }} /><col style={{ width: 280 }} /><col style={{ width: 144 }} /></colgroup>
               <thead><tr><th>数据集</th><th>状态</th><th className="num">进度</th><th>说明</th><th>开始</th></tr></thead>
               <tbody>
                 {jobs.map((job) => (
                   <tr key={job.id}>
-                    <td><span className="cell-title">{labels[job.dataset] ?? job.dataset}</span><span className="cell-sub mono">{job.dataset}</span></td>
+                    <td><span className="cell-title">{displayLabels[job.dataset] ?? job.dataset}</span><span className="cell-sub mono">{job.dataset}</span></td>
                     <td><span className={`status-pill status-${job.status}`}>{statusLabels[job.status] ?? job.status}</span></td>
                     <td className="num mono">{job.progress}%</td>
-                    <td className="muted">{job.message}</td>
+                    <td className="muted job-message"><span title={job.message}>{job.message}</span></td>
                     <td className="mono muted">{dateLabel(job.started_at)}</td>
                   </tr>
                 ))}
@@ -216,12 +218,12 @@ export function DataAdmin() {
         </section>
       </div>
 
-      <section className="panel run-panel">
+      <details className="panel run-panel demo-panel"><summary><span><FlaskConical size={16} aria-hidden="true" />演示任务</span><small className="muted">测试用途 · 点击展开</small></summary>
         <div className="panel-head">
-          <div><span className="eyebrow mono">MANUAL RUN</span><h2>手动触发</h2></div>
-          <Database size={17} />
+          <div><span className="eyebrow mono">MANUAL RUN</span><h2>手动触发演示任务</h2></div>
+
         </div>
-        <p className="panel-footnote">MVP 使用演示种子；真实接入时，启动阶段只加载最近数据，历史由后台回填。</p>
+        <p className="panel-footnote">以下为演示种子任务；真实行情更新请使用上方“公开源同步”。</p>
         <div className="run-grid">
           {Object.entries(labels).map(([key, label]) => (
             <button key={key} className="run-card" onClick={() => run(key)} disabled={busy === key}>
@@ -231,7 +233,7 @@ export function DataAdmin() {
             </button>
           ))}
         </div>
-      </section>
+      </details>
     </div>
   );
 }

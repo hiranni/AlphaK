@@ -13,18 +13,23 @@ test("name, code and pinyin search add a stock and group deletion removes its me
     const groups = await response.json();
     groupId = groups.data.find((group: { name: string }) => group.name === name).id;
     const input = page.getByLabel("证券代码", { exact: true });
-    const result = page.getByRole("button", { name: "贵州茅台 · 600519.SH · 加入", exact: true });
+    const result = page.locator(".watch-suggestions button").filter({ hasText: "600519.SH" }).first();
     for (const query of ["gzmt", "600519", "贵州茅台"]) {
       await input.fill(query);
       await expect(result).toBeVisible();
     }
     await result.click();
+    await page.getByRole("textbox", { name: "备注", exact: true }).fill("E2E 备注");
+    await page.getByRole("button", { name: "加入", exact: true }).click();
     await expect(page.locator(".watch-table")).toContainText("600519.SH");
-    await page.getByRole("button", { name: "删除当前分组", exact: true }).click();
+    await expect(page.locator(".watch-table")).toContainText("E2E 备注");
+    await page.locator(".group-row").filter({ hasText: name }).click({ button: "right" });
+    await page.locator(".watch-context").getByRole("button", { name: "删除分组" }).click();
     await expect(page.getByRole("alertdialog")).toContainText(name);
     await page.getByRole("button", { name: "取消", exact: true }).click();
     await expect(page.locator(".watch-main h2")).toHaveText(name);
-    await page.getByRole("button", { name: "删除当前分组", exact: true }).click();
+    await page.locator(".group-row").filter({ hasText: name }).click({ button: "right" });
+    await page.locator(".watch-context").getByRole("button", { name: "删除分组" }).click();
     await page.getByRole("button", { name: "确认删除", exact: true }).click();
     await expect(page.locator(".watch-main h2")).not.toHaveText(name);
     const after = await (await request.get("/api/v1/watchlists")).json();

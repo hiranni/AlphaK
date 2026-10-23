@@ -1,0 +1,772 @@
+{
+  "timestamp": "20261022-235031",
+  "backup": "/Users/ryan/.alphak/backups/alphak-before-sample-trim-20261022-235031.db",
+  "random_seed": 13919753685729403614,
+  "before": 158,
+  "after": 120,
+  "watchlist_preserved": 37,
+  "non_SH_SZ_removed": [],
+  "randomly_removed": [
+    {
+      "symbol": "000636.SZ",
+      "name": "风华高科"
+    },
+    {
+      "symbol": "000725.SZ",
+      "name": "京东方A"
+    },
+    {
+      "symbol": "000876.SZ",
+      "name": "新希望"
+    },
+    {
+      "symbol": "000983.SZ",
+      "name": "山西焦煤"
+    },
+    {
+      "symbol": "002027.SZ",
+      "name": "分众传媒"
+    },
+    {
+      "symbol": "002028.SZ",
+      "name": "思源电气"
+    },
+    {
+      "symbol": "002080.SZ",
+      "name": "中材科技"
+    },
+    {
+      "symbol": "002185.SZ",
+      "name": "华天科技"
+    },
+    {
+      "symbol": "002230.SZ",
+      "name": "科大讯飞"
+    },
+    {
+      "symbol": "002594.SZ",
+      "name": "比亚迪"
+    },
+    {
+      "symbol": "002812.SZ",
+      "name": "恩捷股份"
+    },
+    {
+      "symbol": "002821.SZ",
+      "name": "凯莱英"
+    },
+    {
+      "symbol": "600016.SH",
+      "name": "民生银行"
+    },
+    {
+      "symbol": "600027.SH",
+      "name": "华电国际"
+    },
+    {
+      "symbol": "600066.SH",
+      "name": "宇通客车"
+    },
+    {
+      "symbol": "600109.SH",
+      "name": "国金证券"
+    },
+    {
+      "symbol": "600183.SH",
+      "name": "生益科技"
+    },
+    {
+      "symbol": "600276.SH",
+      "name": "恒瑞医药"
+    },
+    {
+      "symbol": "600369.SH",
+      "name": "西南证券"
+    },
+    {
+      "symbol": "600383.SH",
+      "name": "金地集团"
+    },
+    {
+      "symbol": "600418.SH",
+      "name": "江淮汽车"
+    },
+    {
+      "symbol": "600547.SH",
+      "name": "山东黄金"
+    },
+    {
+      "symbol": "600732.SH",
+      "name": "爱旭股份"
+    },
+    {
+      "symbol": "600795.SH",
+      "name": "国电电力"
+    },
+    {
+      "symbol": "600809.SH",
+      "name": "山西汾酒"
+    },
+    {
+      "symbol": "600879.SH",
+      "name": "航天电子"
+    },
+    {
+      "symbol": "600900.SH",
+      "name": "长江电力"
+    },
+    {
+      "symbol": "601166.SH",
+      "name": "兴业银行"
+    },
+    {
+      "symbol": "601169.SH",
+      "name": "北京银行"
+    },
+    {
+      "symbol": "601318.SH",
+      "name": "中国平安"
+    },
+    {
+      "symbol": "601607.SH",
+      "name": "上海医药"
+    },
+    {
+      "symbol": "601788.SH",
+      "name": "光大证券"
+    },
+    {
+      "symbol": "601857.SH",
+      "name": "中国石油"
+    },
+    {
+      "symbol": "601872.SH",
+      "name": "招商轮船"
+    },
+    {
+      "symbol": "601878.SH",
+      "name": "浙商证券"
+    },
+    {
+      "symbol": "603606.SH",
+      "name": "东方电缆"
+    },
+    {
+      "symbol": "603882.SH",
+      "name": "金域医学"
+    },
+    {
+      "symbol": "603986.SH",
+      "name": "兆易创新"
+    }
+  ],
+  "retained": [
+    {
+      "symbol": "000063.SZ",
+      "name": "中兴通讯",
+      "watchlist": false
+    },
+    {
+      "symbol": "000069.SZ",
+      "name": "华侨城A",
+      "watchlist": false
+    },
+    {
+      "symbol": "000333.SZ",
+      "name": "美的集团",
+      "watchlist": false
+    },
+    {
+      "symbol": "000338.SZ",
+      "name": "潍柴动力",
+      "watchlist": false
+    },
+    {
+      "symbol": "000400.SZ",
+      "name": "许继电气",
+      "watchlist": true
+    },
+    {
+      "symbol": "000425.SZ",
+      "name": "徐工机械",
+      "watchlist": false
+    },
+    {
+      "symbol": "000528.SZ",
+      "name": "柳工",
+      "watchlist": true
+    },
+    {
+      "symbol": "000530.SZ",
+      "name": "冰山冷热",
+      "watchlist": false
+    },
+    {
+      "symbol": "000559.SZ",
+      "name": "万向钱潮",
+      "watchlist": true
+    },
+    {
+      "symbol": "000625.SZ",
+      "name": "长安汽车",
+      "watchlist": false
+    },
+    {
+      "symbol": "000651.SZ",
+      "name": "格力电器",
+      "watchlist": false
+    },
+    {
+      "symbol": "000657.SZ",
+      "name": "中钨高新",
+      "watchlist": true
+    },
+    {
+      "symbol": "000678.SZ",
+      "name": "襄阳轴承",
+      "watchlist": false
+    },
+    {
+      "symbol": "000708.SZ",
+      "name": "中信特钢",
+      "watchlist": false
+    },
+    {
+      "symbol": "000800.SZ",
+      "name": "一汽解放",
+      "watchlist": false
+    },
+    {
+      "symbol": "000858.SZ",
+      "name": "五粮液",
+      "watchlist": false
+    },
+    {
+      "symbol": "000963.SZ",
+      "name": "华东医药",
+      "watchlist": false
+    },
+    {
+      "symbol": "001201.SZ",
+      "name": "东瑞股份",
+      "watchlist": false
+    },
+    {
+      "symbol": "001309.SZ",
+      "name": "德明利",
+      "watchlist": false
+    },
+    {
+      "symbol": "002007.SZ",
+      "name": "华兰生物",
+      "watchlist": false
+    },
+    {
+      "symbol": "002048.SZ",
+      "name": "宁波华翔",
+      "watchlist": true
+    },
+    {
+      "symbol": "002074.SZ",
+      "name": "国轩高科",
+      "watchlist": false
+    },
+    {
+      "symbol": "002156.SZ",
+      "name": "通富微电",
+      "watchlist": true
+    },
+    {
+      "symbol": "002167.SZ",
+      "name": "东方锆业",
+      "watchlist": true
+    },
+    {
+      "symbol": "002223.SZ",
+      "name": "鱼跃医疗",
+      "watchlist": false
+    },
+    {
+      "symbol": "002252.SZ",
+      "name": "上海莱士",
+      "watchlist": false
+    },
+    {
+      "symbol": "002352.SZ",
+      "name": "顺丰控股",
+      "watchlist": false
+    },
+    {
+      "symbol": "002384.SZ",
+      "name": "东山精密",
+      "watchlist": false
+    },
+    {
+      "symbol": "002459.SZ",
+      "name": "晶澳科技",
+      "watchlist": false
+    },
+    {
+      "symbol": "002463.SZ",
+      "name": "沪电股份",
+      "watchlist": true
+    },
+    {
+      "symbol": "002466.SZ",
+      "name": "天齐锂业",
+      "watchlist": false
+    },
+    {
+      "symbol": "002490.SZ",
+      "name": "山东墨龙",
+      "watchlist": true
+    },
+    {
+      "symbol": "002553.SZ",
+      "name": "南方精工",
+      "watchlist": true
+    },
+    {
+      "symbol": "002555.SZ",
+      "name": "三七互娱",
+      "watchlist": true
+    },
+    {
+      "symbol": "002600.SZ",
+      "name": "领益智造",
+      "watchlist": true
+    },
+    {
+      "symbol": "002639.SZ",
+      "name": "雪人集团",
+      "watchlist": false
+    },
+    {
+      "symbol": "002714.SZ",
+      "name": "牧原股份",
+      "watchlist": false
+    },
+    {
+      "symbol": "002920.SZ",
+      "name": "德赛西威",
+      "watchlist": true
+    },
+    {
+      "symbol": "300014.SZ",
+      "name": "亿纬锂能",
+      "watchlist": false
+    },
+    {
+      "symbol": "300059.SZ",
+      "name": "东方财富",
+      "watchlist": false
+    },
+    {
+      "symbol": "300124.SZ",
+      "name": "汇川技术",
+      "watchlist": false
+    },
+    {
+      "symbol": "300316.SZ",
+      "name": "晶盛机电",
+      "watchlist": false
+    },
+    {
+      "symbol": "300347.SZ",
+      "name": "泰格医药",
+      "watchlist": false
+    },
+    {
+      "symbol": "300450.SZ",
+      "name": "先导智能",
+      "watchlist": false
+    },
+    {
+      "symbol": "300454.SZ",
+      "name": "深信服",
+      "watchlist": false
+    },
+    {
+      "symbol": "300529.SZ",
+      "name": "健帆生物",
+      "watchlist": false
+    },
+    {
+      "symbol": "300628.SZ",
+      "name": "亿联网络",
+      "watchlist": false
+    },
+    {
+      "symbol": "300661.SZ",
+      "name": "圣邦股份",
+      "watchlist": false
+    },
+    {
+      "symbol": "300750.SZ",
+      "name": "宁德时代",
+      "watchlist": false
+    },
+    {
+      "symbol": "600006.SH",
+      "name": "东风股份",
+      "watchlist": false
+    },
+    {
+      "symbol": "600012.SH",
+      "name": "皖通高速",
+      "watchlist": true
+    },
+    {
+      "symbol": "600025.SH",
+      "name": "华能水电",
+      "watchlist": false
+    },
+    {
+      "symbol": "600029.SH",
+      "name": "南方航空",
+      "watchlist": false
+    },
+    {
+      "symbol": "600030.SH",
+      "name": "中信证券",
+      "watchlist": false
+    },
+    {
+      "symbol": "600031.SH",
+      "name": "三一重工",
+      "watchlist": false
+    },
+    {
+      "symbol": "600036.SH",
+      "name": "招商银行",
+      "watchlist": false
+    },
+    {
+      "symbol": "600039.SH",
+      "name": "四川路桥",
+      "watchlist": false
+    },
+    {
+      "symbol": "600096.SH",
+      "name": "云天化",
+      "watchlist": false
+    },
+    {
+      "symbol": "600104.SH",
+      "name": "上汽集团",
+      "watchlist": false
+    },
+    {
+      "symbol": "600118.SH",
+      "name": "中国卫星",
+      "watchlist": false
+    },
+    {
+      "symbol": "600153.SH",
+      "name": "建发股份",
+      "watchlist": false
+    },
+    {
+      "symbol": "600176.SH",
+      "name": "中国巨石",
+      "watchlist": true
+    },
+    {
+      "symbol": "600271.SH",
+      "name": "航天信息",
+      "watchlist": false
+    },
+    {
+      "symbol": "600340.SH",
+      "name": "*ST华幸",
+      "watchlist": false
+    },
+    {
+      "symbol": "600362.SH",
+      "name": "江西铜业",
+      "watchlist": true
+    },
+    {
+      "symbol": "600366.SH",
+      "name": "宁波韵升",
+      "watchlist": true
+    },
+    {
+      "symbol": "600415.SH",
+      "name": "小商品城",
+      "watchlist": false
+    },
+    {
+      "symbol": "600426.SH",
+      "name": "华鲁恒升",
+      "watchlist": false
+    },
+    {
+      "symbol": "600460.SH",
+      "name": "士兰微",
+      "watchlist": false
+    },
+    {
+      "symbol": "600479.SH",
+      "name": "千金药业",
+      "watchlist": true
+    },
+    {
+      "symbol": "600519.SH",
+      "name": "贵州茅台",
+      "watchlist": false
+    },
+    {
+      "symbol": "600522.SH",
+      "name": "中天科技",
+      "watchlist": false
+    },
+    {
+      "symbol": "600548.SH",
+      "name": "深高速",
+      "watchlist": false
+    },
+    {
+      "symbol": "600583.SH",
+      "name": "海油工程",
+      "watchlist": false
+    },
+    {
+      "symbol": "600584.SH",
+      "name": "长电科技",
+      "watchlist": true
+    },
+    {
+      "symbol": "600660.SH",
+      "name": "福耀玻璃",
+      "watchlist": false
+    },
+    {
+      "symbol": "600690.SH",
+      "name": "海尔智家",
+      "watchlist": false
+    },
+    {
+      "symbol": "600693.SH",
+      "name": "东百集团",
+      "watchlist": true
+    },
+    {
+      "symbol": "600721.SH",
+      "name": "百花医药",
+      "watchlist": true
+    },
+    {
+      "symbol": "600737.SH",
+      "name": "中粮糖业",
+      "watchlist": true
+    },
+    {
+      "symbol": "600744.SH",
+      "name": "华银电力",
+      "watchlist": true
+    },
+    {
+      "symbol": "600845.SH",
+      "name": "宝信软件",
+      "watchlist": false
+    },
+    {
+      "symbol": "600867.SH",
+      "name": "通化东宝",
+      "watchlist": false
+    },
+    {
+      "symbol": "601009.SH",
+      "name": "南京银行",
+      "watchlist": false
+    },
+    {
+      "symbol": "601012.SH",
+      "name": "隆基绿能",
+      "watchlist": false
+    },
+    {
+      "symbol": "601066.SH",
+      "name": "中信建投",
+      "watchlist": false
+    },
+    {
+      "symbol": "601069.SH",
+      "name": "西部黄金",
+      "watchlist": true
+    },
+    {
+      "symbol": "601077.SH",
+      "name": "渝农商行",
+      "watchlist": false
+    },
+    {
+      "symbol": "601083.SH",
+      "name": "锦江航运",
+      "watchlist": true
+    },
+    {
+      "symbol": "601186.SH",
+      "name": "中国铁建",
+      "watchlist": false
+    },
+    {
+      "symbol": "601208.SH",
+      "name": "东材科技",
+      "watchlist": true
+    },
+    {
+      "symbol": "601216.SH",
+      "name": "君正集团",
+      "watchlist": false
+    },
+    {
+      "symbol": "601229.SH",
+      "name": "上海银行",
+      "watchlist": false
+    },
+    {
+      "symbol": "601288.SH",
+      "name": "农业银行",
+      "watchlist": true
+    },
+    {
+      "symbol": "601328.SH",
+      "name": "交通银行",
+      "watchlist": false
+    },
+    {
+      "symbol": "601377.SH",
+      "name": "兴业证券",
+      "watchlist": false
+    },
+    {
+      "symbol": "601600.SH",
+      "name": "中国铝业",
+      "watchlist": false
+    },
+    {
+      "symbol": "601601.SH",
+      "name": "中国太保",
+      "watchlist": false
+    },
+    {
+      "symbol": "601628.SH",
+      "name": "中国人寿",
+      "watchlist": false
+    },
+    {
+      "symbol": "601668.SH",
+      "name": "中国建筑",
+      "watchlist": false
+    },
+    {
+      "symbol": "601689.SH",
+      "name": "拓普集团",
+      "watchlist": true
+    },
+    {
+      "symbol": "601865.SH",
+      "name": "福莱特",
+      "watchlist": false
+    },
+    {
+      "symbol": "601869.SH",
+      "name": "长飞光纤",
+      "watchlist": false
+    },
+    {
+      "symbol": "601888.SH",
+      "name": "中国中免",
+      "watchlist": true
+    },
+    {
+      "symbol": "601899.SH",
+      "name": "紫金矿业",
+      "watchlist": false
+    },
+    {
+      "symbol": "601939.SH",
+      "name": "建设银行",
+      "watchlist": false
+    },
+    {
+      "symbol": "601949.SH",
+      "name": "中国出版",
+      "watchlist": true
+    },
+    {
+      "symbol": "601966.SH",
+      "name": "玲珑轮胎",
+      "watchlist": false
+    },
+    {
+      "symbol": "601991.SH",
+      "name": "大唐发电",
+      "watchlist": true
+    },
+    {
+      "symbol": "603014.SH",
+      "name": "威高血净",
+      "watchlist": false
+    },
+    {
+      "symbol": "603081.SH",
+      "name": "大丰实业",
+      "watchlist": true
+    },
+    {
+      "symbol": "603119.SH",
+      "name": "浙江荣泰",
+      "watchlist": true
+    },
+    {
+      "symbol": "603160.SH",
+      "name": "汇顶科技",
+      "watchlist": false
+    },
+    {
+      "symbol": "603195.SH",
+      "name": "公牛集团",
+      "watchlist": false
+    },
+    {
+      "symbol": "603228.SH",
+      "name": "景旺电子",
+      "watchlist": true
+    },
+    {
+      "symbol": "603259.SH",
+      "name": "药明康德",
+      "watchlist": true
+    },
+    {
+      "symbol": "603565.SH",
+      "name": "中谷物流",
+      "watchlist": true
+    },
+    {
+      "symbol": "603806.SH",
+      "name": "福斯特",
+      "watchlist": false
+    },
+    {
+      "symbol": "603833.SH",
+      "name": "欧派家居",
+      "watchlist": false
+    },
+    {
+      "symbol": "605189.SH",
+      "name": "富春染织",
+      "watchlist": true
+    }
+  ],
+  "cache_only_removed": [],
+  "rows_deleted": {
+    "quote_daily": 1578,
+    "quote_snapshot": 43,
+    "quote_staging": 0
+  },
+  "index_snapshots_preserved": true
+}

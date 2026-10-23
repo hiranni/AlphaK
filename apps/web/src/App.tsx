@@ -1,4 +1,5 @@
 import { Route, Routes } from "react-router-dom";
+import { StrategyModule, QuantOverview, QuantSection, TradingSection, tradingPages } from "./pages/QuantWorkspace";
 import { Shell } from "./components/Shell";
 import { Dashboard } from "./pages/Dashboard";
 import { Stock } from "./pages/Stock";
@@ -17,6 +18,14 @@ export default function App() {
         <Route path="index/:code" element={<MarketDetail kind="index" />} />
         <Route path="sector/:id" element={<MarketDetail kind="sector" />} />
         <Route path="watchlist" element={<Watchlist />} />
+        <Route path="quant" element={<StrategyModule />}>
+          <Route index element={<QuantOverview />} />
+          {["strategies", "factors", "backtests", "paper", "signals"].map(section => <Route key={section} path={section} element={<QuantSection section={section} />} />)}
+        </Route>
+        <Route path="trading" element={<StrategyModule trading />}>
+          <Route index element={<TradingSection section="" />} />
+          {tradingPages.filter(p=>p.path).map(p=><Route key={p.path} path={p.path} element={<TradingSection section={p.path} />} />)}
+        </Route>
         <Route path="data" element={<DataAdmin />} />
         <Route path="settings" element={<Settings />} />
         <Route path="*" element={<NotFound />} />

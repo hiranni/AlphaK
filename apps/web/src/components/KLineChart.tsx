@@ -37,7 +37,7 @@ export function KLineChart({ bars, indicator }: { bars: Bar[]; indicator: "macd"
 
     const chart = createChart(mainRef.current, {
       width: mainRef.current.clientWidth,
-      height: 420,
+      height: mainRef.current.clientHeight || 420,
       layout: { background: { type: ColorType.Solid, color: paper }, textColor: ink, fontFamily: "IBM Plex Mono, monospace", fontSize: 11, attributionLogo: false },
       localization: { timeFormatter: (time: Time) => typeof time === "number" ? new Date(time * 1000).toLocaleString("zh-CN", { timeZone: "Asia/Shanghai", hour12: false }) : String(time) },
       grid: { vertLines: { color: line, style: 1 }, horzLines: { color: line, style: 1 } },
@@ -88,7 +88,7 @@ export function KLineChart({ bars, indicator }: { bars: Bar[]; indicator: "macd"
     if (indicator !== "none" && subRef.current) {
       subChart = createChart(subRef.current, {
         width: subRef.current.clientWidth,
-        height: 132,
+        height: subRef.current.clientHeight || 132,
         layout: { background: { type: ColorType.Solid, color: paper }, textColor: ink, fontFamily: "IBM Plex Mono, monospace", fontSize: 10, attributionLogo: false },
         grid: { vertLines: { color: line, style: 1 }, horzLines: { color: line, style: 1 } },
         rightPriceScale: { borderColor: line, scaleMargins: { top: 0.16, bottom: 0.12 } },
@@ -134,8 +134,8 @@ export function KLineChart({ bars, indicator }: { bars: Bar[]; indicator: "macd"
     }
 
     const observer = new ResizeObserver(() => {
-      if (mainRef.current) chart.applyOptions({ width: mainRef.current.clientWidth });
-      if (subRef.current && subChart) subChart.applyOptions({ width: subRef.current.clientWidth });
+      if (mainRef.current) chart.applyOptions({ width: mainRef.current.clientWidth, height: mainRef.current.clientHeight || 420 });
+      if (subRef.current && subChart) subChart.applyOptions({ width: subRef.current.clientWidth, height: subRef.current.clientHeight || 132 });
     });
     if (mainRef.current) observer.observe(mainRef.current);
     if (subRef.current) observer.observe(subRef.current);

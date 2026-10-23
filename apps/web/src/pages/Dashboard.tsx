@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowUpRight, CircleDot, Database, RotateCw } from "lucide-react";
+import { ArrowUpRight, Database, RotateCw } from "lucide-react";
 import { api } from "../api";
 import type { MarketOverview, NewsFeed, QualityReport, SourceStatus } from "../types";
 import { Change } from "../components/Change";
@@ -16,6 +16,8 @@ function newsTime(epoch: number) {
 }
 
 export function Dashboard() {
+  const [marketBreadth, setMarketBreadth] = useState<Awaited<ReturnType<typeof api.marketBreadth>> | null>(null);
+  const [breadthError, setBreadthError] = useState("");
   const [overview, setOverview] = useState<MarketOverview | null>(null);
   const [popular, setPopular] = useState<Awaited<ReturnType<typeof api.popularity>> | null>(null);
   const [news, setNews] = useState<NewsFeed | null>(null);
@@ -57,9 +59,12 @@ export function Dashboard() {
   };
 
   useEffect(() => {
+    const loadBreadth = () => api.marketBreadth().then((value) => { setMarketBreadth(value); setBreadthError(""); }).catch(() => setBreadthError("大盘统计更新失败，稍后自动重试"));
+    loadBreadth();
+    const breadthTimer = window.setInterval(loadBreadth, 30000);
     load();
     const timer = window.setInterval(load, 10000);
-    return () => window.clearInterval(timer);
+    return () => { window.clearInterval(timer); window.clearInterval(breadthTimer); };
   }, []);
 
   if (error && !overview) return <ErrorState message={error} onRetry={load} />;
@@ -68,7 +73,10 @@ export function Dashboard() {
   const { breadth, indices, sectors } = overview;
   const total = breadth.advance + breadth.decline + breadth.flat;
   const advancePct = total ? (breadth.advance / total) * 100 : 0;
-  const declinePct = total ? (breadth.decline / total) * 100 : 0;
+  const market = marketBreadth?.data;
+  const marketTotal = market ? market.advance + market.decline + market.flat : 0;
+  const marketPct = market && marketTotal ? market.advance / marketTotal * 100 : 0;
+  const sameDate = !!market && market.as_of.slice(0, 10) === overview.as_of;
   const sortedSectors = [...sectors].sort((left, right) => right.change_pct - left.change_pct);
   const visibleSectors = heatMode === "high" ? sortedSectors.slice(0, 8) : [...sortedSectors].reverse().slice(0, 8);
   const bestSector = sortedSectors[0];
@@ -114,48 +122,30 @@ export function Dashboard() {
       </section>
 
       <div className="dash-grid">
-        <section className="panel breadth-panel">
+        <section className="panel breadth-panel breadth-comparison">
           <div className="panel-head">
-            <div>
-              <span className="eyebrow mono">BREADTH</span>
-              <h2>样本涨跌分布</h2>
-            </div>
-            <span className="panel-note">真实行情 {total} 只 · 非全市场统计</span>
+            <h2>大盘与样本涨跌分布</h2>
+            <span className="panel-note">红涨 · 绿跌 · 灰平</span>
           </div>
-          <div className="breadth-figure">
-            <div>
-              <span className="mono muted">上涨</span>
-              <strong className="mono is-up">{total ? breadth.advance : "—"}</strong>
+          {[{ label: "大盘", data: market, count: marketTotal, time: market?.as_of, note: market ? `${market.source} · ${marketBreadth?.stale || breadthError ? "更新失败，保留上次统计" : "最新统计"}` : breadthError || marketBreadth?.error || "正在获取大盘统计…" },
+            { label: "样本", data: total ? breadth : null, count: total, time: overview.as_of, note: "本地真实行情" }].map((row) => (
+            <div className="breadth-compare-row" key={row.label} title={row.label === "大盘" ? market?.scope : "本地已有行情的股票样本，非全市场"}>
+              <div className="breadth-row-heading"><strong>{row.label}</strong><span className="muted mono">{row.count ? `${row.count.toLocaleString()} 只` : "等待数据"}</span><span className="breadth-row-time muted" title={row.time}>{row.label === "大盘" ? row.time?.slice(11, 16) || "—" : row.time || "—"}</span></div>
+              <div className="breadth-row-values mono">
+                <span className="is-up">↑ 上涨 <b>{row.data?.advance.toLocaleString() ?? "—"}</b></span>
+                <span className="is-down">↓ 下跌 <b>{row.data?.decline.toLocaleString() ?? "—"}</b></span>
+                <span className="muted">平盘 <b>{row.data?.flat.toLocaleString() ?? "—"}</b></span>
+                <span>上涨占比 <b>{row.data && row.count ? `${(row.data.advance / row.count * 100).toFixed(1)}%` : "—"}</b></span>
+              </div>
+              <div className="breadth-bar" role="img" aria-label={`${row.label}：${row.data ? `上涨 ${row.data.advance}，下跌 ${row.data.decline}，平盘 ${row.data.flat}` : "暂无数据"}`}>
+                {row.data && row.count ? <><span className="breadth-up" style={{ width: `${row.data.advance / row.count * 100}%` }} /><span className="breadth-flat" style={{ width: `${row.data.flat / row.count * 100}%` }} /><span className="breadth-down" style={{ width: `${row.data.decline / row.count * 100}%` }} /></> : null}
+              </div>
+              <div className="breadth-row-note muted" title={row.note}>{row.note}{row.label === "大盘" && market ? ` · 涨停 ${market.limit_up} / 跌停 ${market.limit_down} · 停牌 ${market.suspended}` : ""}</div>
             </div>
-            <div>
-              <span className="mono muted">下跌</span>
-              <strong className="mono is-down">{total ? breadth.decline : "—"}</strong>
-            </div>
-            <div>
-              <span className="mono muted">平盘</span>
-              <strong className="mono">{total ? breadth.flat : "—"}</strong>
-            </div>
-            <div>
-              <span className="mono muted">成交额</span>
-              <strong className="mono">{total && breadth.amount_known ? money(breadth.total_amount) : "—"}</strong>
-            </div>
-          </div>
-          <div className="breadth-bar" aria-label={`上涨 ${breadth.advance}，下跌 ${breadth.decline}，平盘 ${breadth.flat}`}>
-            <span className="breadth-up" style={{ width: `${advancePct}%` }} />
-            <span className="breadth-flat" style={{ width: `${100 - advancePct - declinePct}%` }} />
-            <span className="breadth-down" style={{ width: `${declinePct}%` }} />
-          </div>
-          <div className="breadth-caption">
-            <span className="mono"><CircleDot size={11} className="is-up" /> 涨停 {breadth.limit_up}</span>
-            <span className="mono"><CircleDot size={11} className="is-down" /> 跌停 {breadth.limit_down}</span>
-            <span className="mono muted">上涨占比 {advancePct.toFixed(1)}%</span>
-          </div>
-          <div className="breadth-read">
-            <div className="breadth-read-grid">
-              <div><span>涨跌比</span><strong className="mono">{breadth.decline ? (breadth.advance / breadth.decline).toFixed(2) : "—"}</strong></div>
-              <div><span>涨停 / 跌停</span><strong className="mono">{breadth.limit_up} / {breadth.limit_down}</strong></div>
-              <div><span>板块离散</span><strong className="mono">{bestSector && worstSector ? `${(bestSector.change_pct - worstSector.change_pct).toFixed(2)}%` : "—"}</strong></div>
-            </div>
+          ))}
+          <div className="breadth-comparison-foot">
+            <span>{market && total && sameDate ? <>样本上涨占比{advancePct >= marketPct ? "高于" : "低于"}大盘 <b className="mono">{Math.abs(advancePct - marketPct).toFixed(1)}</b> 个百分点</> : market && total ? "统计日期不同，暂不比较上涨占比" : "大盘与样本数据齐备后显示占比差异"}</span>
+            <span className="muted">样本成交额 {total && breadth.amount_known ? money(breadth.total_amount) : "—"}</span>
           </div>
         </section>
 

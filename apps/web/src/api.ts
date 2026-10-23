@@ -36,6 +36,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  marketBreadth: () => request<{ data: { advance: number; decline: number; flat: number; suspended: number; limit_up: number; limit_down: number; as_of: string; source: string; scope: string } | null; stale: boolean; error: string }>("/market/breadth"),
   popularity: () => request<{data: {symbol:string;name:string;rank:number;close:number|null;change_pct:number|null}[];source:string;updated_at:number;stale:boolean}>("/market/popularity"),
   news: () => request<NewsFeed>("/market/news"),
   retrySupplements: (symbol: string) => request<{ reset: boolean }>(`/instruments/${encodeURIComponent(symbol)}/supplement/retry`, { method: "POST" }),
@@ -53,10 +54,17 @@ export const api = {
   index: (code: string) => request<IndexDetail>(`/indices/${encodeURIComponent(code)}`),
   sectors: () => request<SectorRow[]>("/sectors"),
   sector: (id: number) => request<SectorDetail>(`/sectors/${id}`),
+  watchWorkbench: () => request<import("./types").WatchWorkbench>("/watchlists/workbench"),
+  watchAlerts: () => request<import("./types").WatchAlerts>("/watchlists/alerts"),
+  createWatchAlert: (body: import("./types").WatchAlertInput) => request<import("./types").WatchAlerts>("/watchlists/alerts", { method: "POST", body: JSON.stringify(body) }),
+  updateWatchAlert: (id: string, body: import("./types").WatchAlertInput) => request<import("./types").WatchAlerts>(`/watchlists/alerts/${encodeURIComponent(id)}`, { method: "PUT", body: JSON.stringify(body) }),
+  deleteWatchAlert: (id: string) => request<import("./types").WatchAlerts>(`/watchlists/alerts/${encodeURIComponent(id)}`, { method: "DELETE" }),
   watchlists: () => request<WatchlistGroup[]>("/watchlists"),
   refreshWatchlists: () => request<WatchlistGroup[]>("/watchlists/refresh", { method: "POST" }),
   createGroup: (name: string) => request<WatchlistGroup[]>("/watchlists/groups", { method: "POST", body: JSON.stringify({ name }) }),
   renameGroup: (id: string, name: string) => request<WatchlistGroup[]>(`/watchlists/groups/${id}`, { method: "PUT", body: JSON.stringify({ name }) }),
+  updateGroup: (id: string, body: { name?: string; color?: string }) => request<WatchlistGroup[]>(`/watchlists/groups/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+  clearGroup: (id: string) => request<WatchlistGroup[]>(`/watchlists/groups/${id}/items`, { method: "DELETE" }),
   deleteGroup: (id: string) => request<WatchlistGroup[]>(`/watchlists/groups/${id}`, { method: "DELETE" }),
   reorderItems: (group_id: string, ids: string[]) => request<WatchlistGroup[]>("/watchlists/items/reorder", { method: "PUT", body: JSON.stringify({ group_id, ids }) }),
   addItem: (group_id: string, symbol: string, note = "") => request<WatchlistGroup[]>("/watchlists/items", { method: "POST", body: JSON.stringify({ group_id, symbol, note }) }),

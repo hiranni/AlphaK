@@ -5,6 +5,7 @@ mod indicators;
 mod ingest;
 mod live;
 mod market;
+mod market_breadth;
 mod models;
 mod repository;
 mod routes;
@@ -12,6 +13,7 @@ mod security;
 mod seed;
 mod sources;
 mod sync;
+mod workbench;
 
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
@@ -87,6 +89,11 @@ async fn main() {
 fn spawn_scheduler(state: db::AppState) {
     tokio::spawn(async move {
         loop {
+            if let Ok(conn) = state.db.lock() {
+                if let Err(error) = workbench::evaluate_alerts(&conn, chrono::Utc::now()) {
+                    tracing::warn!(error = %error.message, "watchlist alert evaluation failed");
+                }
+            }
             let now = Local::now();
             if sync::is_schedule_window(now.weekday(), now.hour(), now.minute()) {
                 if let Ok(conn) = state.db.lock() {

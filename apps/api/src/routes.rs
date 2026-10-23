@@ -63,6 +63,8 @@ pub struct SourceSyncBody {
     pub request_id: Option<String>,
 }
 
+type SnapshotRow = (String, f64, f64, f64, f64, f64, f64, f64, String, String);
+
 pub struct ApiJson<T>(pub T);
 
 impl<T, S> FromRequest<S> for ApiJson<T>
@@ -126,6 +128,7 @@ pub fn build_app(state: AppState) -> Router {
     Router::new()
         .route("/api/v1/health", get(health))
         .route("/api/v1/market/overview", get(overview))
+        .route("/api/v1/market/breadth", get(crate::market_breadth::get))
         .route("/api/v1/instruments/search", get(search))
         .route("/api/v1/instruments/{symbol}", get(stock_detail))
         .route("/api/v1/instruments/{symbol}/bars", get(bars))
@@ -153,12 +156,28 @@ pub fn build_app(state: AppState) -> Router {
         .route("/api/v1/sectors", get(sectors))
         .route("/api/v1/sectors/{id}", get(sector_detail))
         .route("/api/v1/sectors/{id}/members", get(sector_members))
+        .route(
+            "/api/v1/watchlists/workbench",
+            get(crate::workbench::dashboard),
+        )
+        .route(
+            "/api/v1/watchlists/alerts",
+            get(crate::workbench::alerts).post(crate::workbench::create_alert),
+        )
+        .route(
+            "/api/v1/watchlists/alerts/{id}",
+            put(crate::workbench::update_alert).delete(crate::workbench::delete_alert),
+        )
         .route("/api/v1/watchlists", get(watchlists).post(create_group))
         .route("/api/v1/watchlists/refresh", post(refresh_watchlists))
         .route("/api/v1/watchlists/groups", post(create_group))
         .route(
             "/api/v1/watchlists/groups/{id}",
             put(rename_group).delete(delete_group),
+        )
+        .route(
+            "/api/v1/watchlists/groups/{id}/items",
+            axum::routing::delete(clear_group),
         )
         .route("/api/v1/watchlists/items", post(add_item))
         .route("/api/v1/watchlists/items/reorder", put(reorder_items))
@@ -584,7 +603,18 @@ async fn stock_detail(
         stale,
         amount_known: latest.amount_known,
     };
-    let snapshot:Option<(String,f64,f64,f64,f64,f64,f64,f64,String,String)>=conn.query_row("SELECT trade_date,open,high,low,close,prev_close,volume,amount,source,fetched_at FROM quote_snapshot WHERE symbol=?1 AND trade_date>=?2",params![symbol,latest.date],|row|Ok((row.get(0)?,row.get(1)?,row.get(2)?,row.get(3)?,row.get(4)?,row.get(5)?,row.get(6)?,row.get(7)?,row.get(8)?,row.get(9)?))).optional()?;
+    let snapshot: Option<SnapshotRow> = conn
+        .query_row(
+            "SELECT trade_date,open,high,low,close,prev_close,volume,amount,source,fetched_at FROM quote_snapshot WHERE symbol=?1 AND trade_date>=?2",
+            params![symbol, latest.date],
+            |row| {
+                Ok((
+                    row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, row.get(4)?,
+                    row.get(5)?, row.get(6)?, row.get(7)?, row.get(8)?, row.get(9)?,
+                ))
+            },
+        )
+        .optional()?;
     if let Some((date, open, high, low, close, previous, volume, amount, source, fetched)) =
         snapshot
     {
@@ -1332,20 +1362,29 @@ async fn update_settings(
     Ok(envelope(settings_from(&conn)?))
 }
 
+fn valid_group_color(value: &str) -> bool {
+    value.len() == 7
+        && value.starts_with('#')
+        && value[1..]
+            .chars()
+            .all(|character| character.is_ascii_hexdigit())
+}
+
 fn watchlist_groups(conn: &Connection) -> Result<Vec<WatchlistGroup>, AppError> {
     let mut stmt =
-        conn.prepare("SELECT id, name, sort FROM watchlist_group ORDER BY sort, name")?;
+        conn.prepare("SELECT id, name, sort, color FROM watchlist_group ORDER BY CASE WHEN id = 'watchlist-all' THEN 0 ELSE 1 END, sort, name")?;
     let groups = stmt
         .query_map([], |r| {
             Ok((
                 r.get::<_, String>(0)?,
                 r.get::<_, String>(1)?,
                 r.get::<_, i64>(2)?,
+                r.get::<_, String>(3)?,
             ))
         })?
         .collect::<rusqlite::Result<Vec<_>>>()?;
     let mut out = Vec::new();
-    for (id, name, sort) in groups {
+    for (id, name, sort, color) in groups {
         let mut stmt = conn.prepare("SELECT w.id, w.symbol, i.name, w.note, w.sort FROM watchlist_item w JOIN instruments i ON i.symbol = w.symbol WHERE w.group_id = ?1 ORDER BY w.sort, w.created_at")?;
         let items = stmt
             .query_map(params![id], |r| {
@@ -1392,6 +1431,7 @@ fn watchlist_groups(conn: &Connection) -> Result<Vec<WatchlistGroup>, AppError> 
         out.push(WatchlistGroup {
             id,
             name,
+            color,
             sort,
             items: item_rows,
         });
@@ -1414,9 +1454,13 @@ async fn create_group(
     if name.is_empty() {
         return Err(AppError::bad_request("分组名称不能为空"));
     }
+    let color = body.color.as_deref().unwrap_or("#8a8175");
+    if !valid_group_color(color) {
+        return Err(AppError::bad_request("分组颜色必须是 #RRGGBB"));
+    }
     let conn = db(&state)?;
     let id = format!("grp-{}", uuid::Uuid::new_v4());
-    conn.execute("INSERT INTO watchlist_group (id, name, sort) VALUES (?1, ?2, (SELECT COALESCE(MAX(sort),0)+1 FROM watchlist_group))", params![id, name])?;
+    conn.execute("INSERT INTO watchlist_group (id, name, sort, color) VALUES (?1, ?2, (SELECT COALESCE(MAX(sort),0)+1 FROM watchlist_group), ?3)", params![id, name, color])?;
     Ok(envelope(watchlist_groups(&conn)?))
 }
 
@@ -1434,14 +1478,25 @@ async fn rename_group(
     ApiPath(id): ApiPath<String>,
     ApiJson(body): ApiJson<RenameGroupBody>,
 ) -> Result<Json<ApiResponse<Vec<WatchlistGroup>>>, AppError> {
-    let name = body.name.trim();
-    if name.is_empty() {
+    if id == crate::db::WATCHLIST_ALL {
+        return Err(AppError::bad_request("全部自选是固定入口，不能重命名或修改颜色"));
+    }
+    if body.name.is_none() && body.color.is_none() {
+        return Err(AppError::bad_request("至少提供名称或颜色"));
+    }
+    let name = body.name.as_deref().map(str::trim);
+    if name.is_some_and(str::is_empty) {
         return Err(AppError::bad_request("分组名称不能为空"));
+    }
+    if let Some(color) = body.color.as_deref() {
+        if !valid_group_color(color) {
+            return Err(AppError::bad_request("分组颜色必须是 #RRGGBB"));
+        }
     }
     let conn = db(&state)?;
     let changed = conn.execute(
-        "UPDATE watchlist_group SET name = ?1 WHERE id = ?2",
-        params![name, id],
+        "UPDATE watchlist_group SET name = COALESCE(?1, name), color = COALESCE(?2, color) WHERE id = ?3",
+        params![name, body.color.as_deref(), id],
     )?;
     if changed == 0 {
         return Err(AppError::not_found("分组不存在"));
@@ -1478,14 +1533,35 @@ async fn delete_group(
     ApiPath(id): ApiPath<String>,
 ) -> Result<Json<ApiResponse<Vec<WatchlistGroup>>>, AppError> {
     let conn = db(&state)?;
-    let count: i64 =
-        conn.query_row("SELECT COUNT(*) FROM watchlist_group", [], |row| row.get(0))?;
-    if count <= 1 {
-        return Err(AppError::bad_request("至少保留一个自选分组"));
+    if id == crate::db::WATCHLIST_ALL {
+        return Err(AppError::bad_request("不能删除全部自选入口"));
     }
     let changed = conn.execute("DELETE FROM watchlist_group WHERE id = ?1", params![id])?;
     if changed == 0 {
         return Err(AppError::not_found("分组不存在"));
+    }
+    Ok(envelope(watchlist_groups(&conn)?))
+}
+
+async fn clear_group(
+    State(state): State<AppState>,
+    ApiPath(id): ApiPath<String>,
+) -> Result<Json<ApiResponse<Vec<WatchlistGroup>>>, AppError> {
+    let conn = db(&state)?;
+    let exists: Option<i64> = conn
+        .query_row(
+            "SELECT 1 FROM watchlist_group WHERE id = ?1",
+            params![id],
+            |row| row.get(0),
+        )
+        .optional()?;
+    if exists.is_none() {
+        return Err(AppError::not_found("分组不存在"));
+    }
+    if id == crate::db::WATCHLIST_ALL {
+        conn.execute("DELETE FROM watchlist_item", [])?;
+    } else {
+        conn.execute("DELETE FROM watchlist_item WHERE group_id = ?1", params![id])?;
     }
     Ok(envelope(watchlist_groups(&conn)?))
 }
@@ -1496,17 +1572,16 @@ async fn add_item(
 ) -> Result<Json<ApiResponse<Vec<WatchlistGroup>>>, AppError> {
     let conn = db(&state)?;
     get_instrument(&conn, &body.symbol)?;
-    let exists: Option<String> = conn
-        .query_row(
-            "SELECT id FROM watchlist_item WHERE group_id = ?1 AND symbol = ?2",
-            params![body.group_id, body.symbol],
-            |r| r.get(0),
-        )
-        .optional()?;
-    if exists.is_none() {
+    let tx = conn.unchecked_transaction()?;
+    let group_exists: bool = tx.query_row("SELECT EXISTS(SELECT 1 FROM watchlist_group WHERE id=?1)", [&body.group_id], |r| r.get(0))?;
+    if !group_exists { return Err(AppError::not_found("分组不存在")); }
+    let note = body.note.unwrap_or_default();
+    // Join the collection first. Assigning to a group never replaces its note.
+    for group_id in [crate::db::WATCHLIST_ALL, body.group_id.as_str()] {
         let id = format!("item-{}", uuid::Uuid::new_v4());
-        conn.execute("INSERT INTO watchlist_item (id, group_id, symbol, note, sort, created_at) VALUES (?1, ?2, ?3, ?4, (SELECT COALESCE(MAX(sort),0)+1 FROM watchlist_item WHERE group_id = ?2), ?5)", params![id, body.group_id, body.symbol, body.note.unwrap_or_default(), now_iso()])?;
+        tx.execute("INSERT OR IGNORE INTO watchlist_item (id, group_id, symbol, note, sort, created_at) VALUES (?1, ?2, ?3, ?4, (SELECT COALESCE(MAX(sort),0)+1 FROM watchlist_item WHERE group_id = ?2), ?5)", params![id, group_id, body.symbol, note, now_iso()])?;
     }
+    tx.commit()?;
     Ok(envelope(watchlist_groups(&conn)?))
 }
 
@@ -1536,7 +1611,16 @@ async fn delete_item(
     ApiPath(id): ApiPath<String>,
 ) -> Result<Json<ApiResponse<Vec<WatchlistGroup>>>, AppError> {
     let conn = db(&state)?;
-    conn.execute("DELETE FROM watchlist_item WHERE id = ?1", params![id])?;
+    let tx = conn.unchecked_transaction()?;
+    let item: Option<(String,String)> = tx.query_row("SELECT group_id,symbol FROM watchlist_item WHERE id=?1", [&id], |r| Ok((r.get(0)?,r.get(1)?))).optional()?;
+    if let Some((group_id,symbol)) = item {
+        if group_id == crate::db::WATCHLIST_ALL {
+            tx.execute("DELETE FROM watchlist_item WHERE symbol=?1", [symbol])?;
+        } else {
+            tx.execute("DELETE FROM watchlist_item WHERE id=?1", [id])?;
+        }
+    }
+    tx.commit()?;
     Ok(envelope(watchlist_groups(&conn)?))
 }
 
@@ -2027,7 +2111,7 @@ mod tests {
     use tower::ServiceExt;
 
     #[tokio::test]
-    async fn default_group_can_be_deleted_but_last_group_is_retained() {
+    async fn last_custom_group_can_be_deleted_but_collection_is_retained() {
         let state = crate::db::test_state();
         {
             let conn = state.db.lock().unwrap();
@@ -2050,12 +2134,11 @@ mod tests {
                 )
                 .unwrap();
             assert_eq!(orphaned, 0);
-            conn.execute("DELETE FROM watchlist_group WHERE id <> 'grp-test'", [])
+            conn.execute("DELETE FROM watchlist_group WHERE id NOT IN ('grp-test','watchlist-all')", [])
                 .unwrap();
         }
-        assert!(delete_group(State(state), ApiPath("grp-test".into()))
-            .await
-            .is_err());
+        delete_group(State(state.clone()), ApiPath("grp-test".into())).await.unwrap();
+        assert!(delete_group(State(state), ApiPath(crate::db::WATCHLIST_ALL.into())).await.is_err());
     }
 
     #[tokio::test]
@@ -2282,7 +2365,7 @@ mod tests {
             .await
             .unwrap();
         let groups: serde_json::Value = serde_json::from_slice(&body).unwrap();
-        let default = &groups["data"][0];
+        let default = groups["data"].as_array().unwrap().iter().find(|g| g["id"] != crate::db::WATCHLIST_ALL).unwrap();
         let id = default["id"].as_str().unwrap();
         let ids: Vec<String> = default["items"]
             .as_array()
@@ -2310,7 +2393,7 @@ mod tests {
             .await
             .unwrap();
         let after: serde_json::Value = serde_json::from_slice(&body).unwrap();
-        let first = after["data"][0]["items"][0]["id"].as_str().unwrap();
+        let first = after["data"].as_array().unwrap().iter().find(|g| g["id"] == id).unwrap()["items"][0]["id"].as_str().unwrap();
         assert_eq!(first, reversed[0]);
 
         let res = app
@@ -2338,6 +2421,119 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(res.status(), StatusCode::OK);
+    }
+
+    #[tokio::test]
+    async fn watchlist_group_color_and_clear_items() {
+        let app = build_app(crate::db::test_state());
+        let res = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .uri("/api/v1/watchlists")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        let body = axum::body::to_bytes(res.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let groups: serde_json::Value = serde_json::from_slice(&body).unwrap();
+        let id = groups["data"].as_array().unwrap().iter().find(|g| g["id"] != crate::db::WATCHLIST_ALL).unwrap()["id"].as_str().unwrap().to_string();
+        let res = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("PUT")
+                    .uri(format!("/api/v1/watchlists/groups/{id}"))
+                    .header("content-type", "application/json")
+                    .body(Body::from(r##"{"color":"#2f6f5e"}"##))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), StatusCode::OK);
+        let res = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("PUT")
+                    .uri(format!("/api/v1/watchlists/groups/{id}"))
+                    .header("content-type", "application/json")
+                    .body(Body::from(r##"{"color":"bad"}"##))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), StatusCode::BAD_REQUEST);
+        let res = app
+            .oneshot(
+                Request::builder()
+                    .method("DELETE")
+                    .uri(format!("/api/v1/watchlists/groups/{id}/items"))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), StatusCode::OK);
+        let body = axum::body::to_bytes(res.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let value: serde_json::Value = serde_json::from_slice(&body).unwrap();
+        let group = value["data"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|group| group["id"] == id)
+            .unwrap();
+        assert_eq!(group["color"], "#2f6f5e");
+        assert_eq!(group["items"].as_array().unwrap().len(), 0);
+    }
+
+    #[tokio::test]
+    async fn watchlist_collection_survives_without_custom_groups() {
+        async fn call(app: &Router, method: &str, uri: &str, body: serde_json::Value, status: StatusCode) -> serde_json::Value {
+            let response = app.clone().oneshot(Request::builder().method(method).uri(uri)
+                .header("content-type", "application/json")
+                .body(Body::from(body.to_string())).unwrap()).await.unwrap();
+            assert_eq!(response.status(), status, "{method} {uri}");
+            let bytes = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
+            serde_json::from_slice(&bytes).unwrap()
+        }
+        let state = crate::db::test_state();
+        let app = build_app(state.clone());
+        let before = watchlist_groups(&state.db.lock().unwrap()).unwrap()[0].items.len();
+        for id in ["grp-default", "grp-banks"] {
+            call(&app,"DELETE", &format!("/api/v1/watchlists/groups/{id}"), serde_json::Value::Null, StatusCode::OK).await;
+        }
+        let data = call(&app,"GET","/api/v1/watchlists",serde_json::Value::Null,StatusCode::OK).await;
+        assert_eq!(data["data"].as_array().unwrap().len(),1);
+        assert_eq!(data["data"][0]["id"],crate::db::WATCHLIST_ALL);
+        assert_eq!(data["data"][0]["items"].as_array().unwrap().len(),before);
+        for (method,body) in [("DELETE",serde_json::Value::Null),("PUT",serde_json::json!({"name":"rename"}))] {
+            call(&app,method,"/api/v1/watchlists/groups/watchlist-all",body,StatusCode::BAD_REQUEST).await;
+        }
+        call(&app,"DELETE","/api/v1/watchlists/groups/watchlist-all/items",serde_json::Value::Null,StatusCode::OK).await;
+        let added=call(&app,"POST","/api/v1/watchlists/items",serde_json::json!({"group_id":"watchlist-all","symbol":"600519.SH","note":"collection note"}),StatusCode::OK).await;
+        let item_id=added["data"][0]["items"][0]["id"].as_str().unwrap().to_string();
+        let created=call(&app,"POST","/api/v1/watchlists/groups",serde_json::json!({"name":"test"}),StatusCode::OK).await;
+        let group_id=created["data"][1]["id"].as_str().unwrap().to_string();
+        for _ in 0..2 {
+            let result=call(&app,"POST","/api/v1/watchlists/items",serde_json::json!({"group_id":group_id,"symbol":"600519.SH","note":"group note"}),StatusCode::OK).await;
+            assert_eq!(result["data"][0]["items"].as_array().unwrap().len(),1);
+            assert_eq!(result["data"][0]["items"][0]["note"],"collection note");
+            assert_eq!(result["data"][1]["items"].as_array().unwrap().len(),1);
+        }
+        call(&app,"DELETE",&format!("/api/v1/watchlists/groups/{group_id}/items"),serde_json::Value::Null,StatusCode::OK).await;
+        assert_eq!(watchlist_groups(&state.db.lock().unwrap()).unwrap()[0].items.len(),1);
+        call(&app,"POST","/api/v1/watchlists/items",serde_json::json!({"group_id":group_id,"symbol":"600519.SH"}),StatusCode::OK).await;
+        let removed=call(&app,"DELETE",&format!("/api/v1/watchlists/items/{item_id}"),serde_json::Value::Null,StatusCode::OK).await;
+        assert!(removed["data"].as_array().unwrap().iter().all(|g|g["items"].as_array().unwrap().is_empty()));
+        // An invalid group must not leave a partially added collection entry.
+        call(&app,"POST","/api/v1/watchlists/items",serde_json::json!({"group_id":"missing","symbol":"600519.SH"}),StatusCode::NOT_FOUND).await;
+        assert!(watchlist_groups(&state.db.lock().unwrap()).unwrap()[0].items.is_empty());
     }
 
     #[tokio::test]

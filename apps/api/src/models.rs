@@ -270,6 +270,7 @@ pub struct WatchlistItem {
 pub struct WatchlistGroup {
     pub id: String,
     pub name: String,
+    pub color: String,
     pub sort: i64,
     pub items: Vec<WatchlistItem>,
 }
@@ -329,6 +330,8 @@ pub struct Health {
 #[derive(Debug, Deserialize)]
 pub struct CreateGroupBody {
     pub name: String,
+    #[serde(default)]
+    pub color: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -340,7 +343,10 @@ pub struct AddItemBody {
 
 #[derive(Debug, Deserialize)]
 pub struct RenameGroupBody {
-    pub name: String,
+    #[serde(default)]
+    pub name: Option<String>,
+    #[serde(default)]
+    pub color: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]

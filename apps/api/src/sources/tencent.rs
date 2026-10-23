@@ -4,7 +4,10 @@ use serde_json::Value;
 use super::{DailyBar, Snapshot};
 
 const QUOTE: &str = "https://qt.gtimg.cn/q=";
-const KLINE: &str = "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get";
+const KLINES: [&str; 2] = [
+    "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/fqkline/get",
+    "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get",
+];
 
 fn code(symbol: &str) -> Result<String, String> {
     let (code, exchange) = symbol
@@ -36,19 +39,34 @@ pub async fn daily(
         other => return Err(format!("unsupported adjust: {other}")),
     };
     let param = format!("{},day,{},{},320,{}", code(symbol)?, start, end, adjust);
-    let response = client
-        .get(KLINE)
-        .query(&[("param", param)])
-        .send()
-        .await
-        .map_err(|err| format!("tencent daily request: {err}"))?
-        .error_for_status()
-        .map_err(|err| format!("tencent daily status: {err}"))?;
-    let text = response
-        .text()
-        .await
-        .map_err(|err| format!("tencent daily body: {err}"))?;
-    parse_daily(&text, symbol, key)
+    let mut errors: Vec<String> = Vec::new();
+    for endpoint in KLINES {
+        let result = async {
+            let response = client
+                .get(endpoint)
+                .query(&[("param", &param)])
+                .send()
+                .await
+                .map_err(|err| format!("tencent daily request: {err}"))?
+                .error_for_status()
+                .map_err(|err| format!("tencent daily status: {err}"))?;
+            let text = response
+                .text()
+                .await
+                .map_err(|err| format!("tencent daily body: {err}"))?;
+            let bars = parse_daily(&text, symbol, key)?;
+            if bars.is_empty() {
+                return Err("tencent empty daily response".into());
+            }
+            Ok(bars)
+        }
+        .await;
+        match result {
+            Ok(bars) => return Ok(bars),
+            Err(error) => errors.push(error),
+        }
+    }
+    Err(errors.join(" | "))
 }
 
 pub fn parse_daily(text: &str, symbol: &str, key: &str) -> Result<Vec<DailyBar>, String> {

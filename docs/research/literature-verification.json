@@ -1,0 +1,730 @@
+{
+  "searched_on": "2026-10-22",
+  "method": "Crossref bibliographic queries plus primary NBER/arXiv pages; not a systematic review",
+  "metadata_warning": "Crossref records may be revised; no claim all linked publisher full texts were read",
+  "references": {
+    "R01": {
+      "doi": "10.1016/j.jfineco.2014.10.010",
+      "title": [
+        "A five-factor asset pricing model"
+      ],
+      "authors": [
+        "Eugene F. Fama",
+        "Kenneth R. French"
+      ],
+      "published": {
+        "date-parts": [
+          [
+            2015,
+            4
+          ]
+        ]
+      },
+      "journal": [
+        "Journal of Financial Economics"
+      ],
+      "abstract": null,
+      "url": "https://doi.org/10.1016/j.jfineco.2014.10.010",
+      "verified_via": "Crossref API",
+      "accessed": "2026-10-22"
+    },
+    "R02": {
+      "DOI": "10.1016/j.jfineco.2013.01.003",
+      "title": [
+        "The other side of value: The gross profitability premium"
+      ],
+      "author": [
+        {
+          "given": "Robert",
+          "family": "Novy-Marx",
+          "sequence": "first",
+          "affiliation": [],
+          "role": [
+            {
+              "vocabulary": "crossref",
+              "role": "author"
+            }
+          ]
+        }
+      ],
+      "published": {
+        "date-parts": [
+          [
+            2013,
+            4
+          ]
+        ]
+      },
+      "abstract": null,
+      "container-title": [
+        "Journal of Financial Economics"
+      ]
+    },
+    "R03": {
+      "DOI": "10.3386/w24458",
+      "title": [
+        "Size and Value in China"
+      ],
+      "author": [
+        {
+          "given": "Jianan",
+          "family": "Liu",
+          "sequence": "first",
+          "affiliation": [],
+          "role": [
+            {
+              "vocabulary": "crossref",
+              "role": "author"
+            }
+          ]
+        },
+        {
+          "given": "Robert",
+          "family": "Stambaugh",
+          "sequence": "additional",
+          "affiliation": [],
+          "role": [
+            {
+              "vocabulary": "crossref",
+              "role": "author"
+            }
+          ]
+        },
+        {
+          "given": "Yu",
+          "family": "Yuan",
+          "sequence": "additional",
+          "affiliation": [],
+          "role": [
+            {
+              "vocabulary": "crossref",
+              "role": "author"
+            }
+          ]
+        }
+      ],
+      "published": {
+        "date-parts": [
+          [
+            2018,
+            3
+          ]
+        ]
+      },
+      "abstract": null,
+      "container-title": null
+    },
+    "R04": {
+      "DOI": "10.1016/j.jfineco.2011.11.003",
+      "title": [
+        "Time series momentum"
+      ],
+      "author": [
+        {
+          "given": "Tobias J.",
+          "family": "Moskowitz",
+          "sequence": "first",
+          "affiliation": [],
+          "role": [
+            {
+              "vocabulary": "crossref",
+              "role": "author"
+            }
+          ]
+        },
+        {
+          "given": "Yao Hua",
+          "family": "Ooi",
+          "sequence": "additional",
+          "affiliation": [],
+          "role": [
+            {
+              "vocabulary": "crossref",
+              "role": "author"
+            }
+          ]
+        },
+        {
+          "given": "Lasse Heje",
+          "family": "Pedersen",
+          "sequence": "additional",
+          "affiliation": [],
+          "role": [
+            {
+              "vocabulary": "crossref",
+              "role": "author"
+            }
+          ]
+        }
+      ],
+      "published": {
+        "date-parts": [
+          [
+            2012,
+            5
+          ]
+        ]
+      },
+      "abstract": null,
+      "container-title": [
+        "Journal of Financial Economics"
+      ]
+    },
+    "R05": {
+      "doi": "10.1111/j.1540-6261.2006.00885.x",
+      "title": [
+        "Investor Sentiment and the Cross‐Section of Stock Returns"
+      ],
+      "authors": [
+        "MALCOLM BAKER",
+        "JEFFREY WURGLER"
+      ],
+      "published": {
+        "date-parts": [
+          [
+            2006,
+            8
+          ]
+        ]
+      },
+      "journal": [
+        "The Journal of Finance"
+      ],
+      "abstract": "<jats:title>ABSTRACT</jats:title>\n                  <jats:p>We study how investor sentiment affects the cross‐section of stock returns. We predict that a wave of investor sentiment has larger effects on securities whose valuations are highly subjective and difficult to arbitrage. Consistent with this prediction, we find that when beginning‐of‐period proxies for sentiment are low, subsequent returns are relatively high for small stocks, young stocks, high volatility stocks, unprofitable stocks, non‐dividend‐paying stocks, extreme growth stocks, and distressed stocks. When sentiment is high, on the other hand, these categories of stock earn relatively low subsequent returns.</jats:p>",
+      "url": "https://doi.org/10.1111/j.1540-6261.2006.00885.x",
+      "verified_via": "Crossref API",
+      "accessed": "2026-10-22"
+    },
+    "R06": {
+      "doi": "10.1257/jep.21.2.129",
+      "title": [
+        "Investor Sentiment in the Stock Market"
+      ],
+      "authors": [
+        "Malcolm Baker",
+        "Jeffrey Wurgler"
+      ],
+      "published": {
+        "date-parts": [
+          [
+            2007,
+            4,
+            1
+          ]
+        ]
+      },
+      "journal": [
+        "Journal of Economic Perspectives"
+      ],
+      "abstract": "<jats:p>Investor sentiment, defined broadly, is a belief about future cash flows and investment risks that is not justified by the facts at hand. The question is no longer whether investor sentiment affects stock prices, but how to measure investor sentiment and quantify its effects. One approach is “bottom up,” using biases in individual investor psychology, such as overconfidence, representativeness, and conservatism, to explain how individual investors underreact or overreact to past returns or fundamentals The investor sentiment approach that we develop in this paper is, by contrast, distinctly “top down” and macroeconomic: we take the origin of investor sentiment as exogenous and focus on its empirical effects. We show that it is quite possible to measure investor sentiment and that waves of sentiment have clearly discernible, important, and regular effects on individual firms and on the stock market as a whole. The top-down approach builds on the two broader and more irrefutable assumptions of behavioral finance—sentiment and the limits to arbitrage—to explain which stocks are likely to be most affected by sentiment. In particular, stocks that are difficult to arbitrage or to value are most affected by sentiment.</jats:p>",
+      "url": "https://doi.org/10.1257/jep.21.2.129",
+      "verified_via": "Crossref API",
+      "accessed": "2026-10-22"
+    },
+    "R07": {
+      "DOI": "10.1111/j.1540-6261.2007.01232.x",
+      "title": [
+        "Giving Content to Investor Sentiment: The Role of Media in the Stock Market"
+      ],
+      "author": [
+        {
+          "given": "PAUL C.",
+          "family": "TETLOCK",
+          "sequence": "first",
+          "affiliation": [],
+          "role": [
+            {
+              "vocabulary": "crossref",
+              "role": "author"
+            }
+          ]
+        }
+      ],
+      "published": {
+        "date-parts": [
+          [
+            2007,
+            5,
+            8
+          ]
+        ]
+      },
+      "abstract": "<jats:title>ABSTRACT</jats:title>\n                  <jats:p>\n                    I quantitatively measure the interactions between the media and the stock market using daily content from a popular\n                    <jats:italic>Wall Street Journal</jats:italic>\n                    column. I find that high media pessimism predicts downward pressure on market prices followed by a reversion to fundamentals, and unusually high or low pessimism predicts high market trading volume. These and similar results are consistent with theoretical models of noise and liquidity traders, and are inconsistent with theories of media content as a proxy for new information about fundamental asset values, as a proxy for market volatility, or as a sideshow with no relationship to asset markets.\n                  </jats:p>",
+      "container-title": [
+        "The Journal of Finance"
+      ]
+    },
+    "R08": {
+      "doi": "10.1111/j.1540-6261.2010.01625.x",
+      "title": [
+        "When Is a Liability Not a Liability? Textual Analysis, Dictionaries, and 10‐Ks"
+      ],
+      "authors": [
+        "TIM LOUGHRAN",
+        "BILL MCDONALD"
+      ],
+      "published": {
+        "date-parts": [
+          [
+            2011,
+            1,
+            6
+          ]
+        ]
+      },
+      "journal": [
+        "The Journal of Finance"
+      ],
+      "abstract": "<jats:title>ABSTRACT</jats:title>\n                  <jats:p>Previous research uses negative word counts to measure the tone of a text. We show that word lists developed for other disciplines misclassify common words in financial text. In a large sample of 10‐Ks during 1994 to 2008, almost three‐fourths of the words identified as negative by the widely used Harvard Dictionary are words typically not considered negative in financial contexts. We develop an alternative negative word list, along with five other word lists, that better reflect tone in financial text. We link the word lists to 10‐K filing returns, trading volume, return volatility, fraud, material weakness, and unexpected earnings.</jats:p>",
+      "url": "https://doi.org/10.1111/j.1540-6261.2010.01625.x",
+      "verified_via": "Crossref API",
+      "accessed": "2026-10-22"
+    },
+    "R09": {
+      "doi": "10.2307/1912559",
+      "title": [
+        "A New Approach to the Economic Analysis of Nonstationary Time Series and the Business Cycle"
+      ],
+      "authors": [
+        "James D. Hamilton"
+      ],
+      "published": {
+        "date-parts": [
+          [
+            1989,
+            3
+          ]
+        ]
+      },
+      "journal": [
+        "Econometrica"
+      ],
+      "abstract": null,
+      "url": "https://doi.org/10.2307/1912559",
+      "verified_via": "Crossref API",
+      "accessed": "2026-10-22"
+    },
+    "R10": {
+      "doi": "10.1016/S0047-259X(03)00096-4",
+      "title": [
+        "A well-conditioned estimator for large-dimensional covariance matrices"
+      ],
+      "authors": [
+        "Olivier Ledoit",
+        "Michael Wolf"
+      ],
+      "published": {
+        "date-parts": [
+          [
+            2004,
+            2
+          ]
+        ]
+      },
+      "journal": [
+        "Journal of Multivariate Analysis"
+      ],
+      "abstract": null,
+      "url": "https://doi.org/10.1016/s0047-259x(03)00096-4",
+      "verified_via": "Crossref API",
+      "accessed": "2026-10-22"
+    },
+    "R11": {
+      "DOI": "10.2307/1913610",
+      "title": [
+        "A Simple, Positive Semi-Definite, Heteroskedasticity and Autocorrelation Consistent Covariance Matrix"
+      ],
+      "author": [
+        {
+          "given": "Whitney K.",
+          "family": "Newey",
+          "sequence": "first",
+          "affiliation": [],
+          "role": [
+            {
+              "vocabulary": "crossref",
+              "role": "author"
+            }
+          ]
+        },
+        {
+          "given": "Kenneth D.",
+          "family": "West",
+          "sequence": "additional",
+          "affiliation": [],
+          "role": [
+            {
+              "vocabulary": "crossref",
+              "role": "author"
+            }
+          ]
+        }
+      ],
+      "published": {
+        "date-parts": [
+          [
+            1987,
+            5
+          ]
+        ]
+      },
+      "abstract": null,
+      "container-title": [
+        "Econometrica"
+      ]
+    },
+    "R12": {
+      "DOI": "10.1111/1468-0262.00152",
+      "title": [
+        "A Reality Check for Data Snooping"
+      ],
+      "author": [
+        {
+          "given": "Halbert",
+          "family": "White",
+          "sequence": "first",
+          "affiliation": [],
+          "role": [
+            {
+              "vocabulary": "crossref",
+              "role": "author"
+            }
+          ]
+        }
+      ],
+      "published": {
+        "date-parts": [
+          [
+            2000,
+            9
+          ]
+        ]
+      },
+      "abstract": null,
+      "container-title": [
+        "Econometrica"
+      ]
+    },
+    "R13": {
+      "doi": "10.1093/rfs/hhv059",
+      "title": [
+        "… and the Cross-Section of Expected Returns"
+      ],
+      "authors": [
+        "Campbell R. Harvey",
+        "Yan Liu",
+        "Heqing Zhu"
+      ],
+      "published": {
+        "date-parts": [
+          [
+            2015,
+            10,
+            9
+          ]
+        ]
+      },
+      "journal": [
+        "Review of Financial Studies"
+      ],
+      "abstract": null,
+      "url": "https://doi.org/10.1093/rfs/hhv059",
+      "verified_via": "Crossref API",
+      "accessed": "2026-10-22"
+    },
+    "R14": {
+      "doi": "10.3905/jpm.2014.40.5.094",
+      "title": [
+        "The Deflated Sharpe Ratio:\n                    <i>Correcting for Selection Bias, Backtest</i>\n                    <i>Overfitting, and Non-Normality</i>"
+      ],
+      "authors": [
+        "David H. Bailey",
+        "Marcos López de Prado"
+      ],
+      "published": {
+        "date-parts": [
+          [
+            2014,
+            9,
+            30
+          ]
+        ]
+      },
+      "journal": [
+        "The Journal of Portfolio Management"
+      ],
+      "abstract": null,
+      "url": "https://doi.org/10.3905/jpm.2014.40.5.094",
+      "verified_via": "Crossref API",
+      "accessed": "2026-10-22"
+    },
+    "R15": {
+      "doi": "10.1093/rfs/hhaa009",
+      "title": [
+        "Empirical Asset Pricing via Machine Learning"
+      ],
+      "authors": [
+        "Shihao Gu",
+        "Bryan Kelly",
+        "Dacheng Xiu"
+      ],
+      "published": {
+        "date-parts": [
+          [
+            2020,
+            2,
+            26
+          ]
+        ]
+      },
+      "journal": [
+        "The Review of Financial Studies"
+      ],
+      "abstract": "<jats:title>Abstract</jats:title>\n                  <jats:p>We perform a comparative analysis of machine learning methods for the canonical problem of empirical asset pricing: measuring asset risk premiums. We demonstrate large economic gains to investors using machine learning forecasts, in some cases doubling the performance of leading regression-based strategies from the literature. We identify the best-performing methods (trees and neural networks) and trace their predictive gains to allowing nonlinear predictor interactions missed by other methods. All methods agree on the same set of dominant predictive signals, a set that includes variations on momentum, liquidity, and volatility.</jats:p>\n                  <jats:p>Authors have furnished an Internet Appendix, which is available on the Oxford University Press Web site next to the link to the final published paper online.</jats:p>",
+      "url": "https://doi.org/10.1093/rfs/hhaa009",
+      "verified_via": "Crossref API",
+      "accessed": "2026-10-22"
+    },
+    "R16": {
+      "DOI": "10.2139/ssrn.4489826",
+      "title": [
+        "FinGPT: Open-Source Financial Large Language Models"
+      ],
+      "author": [
+        {
+          "given": "Hongyang",
+          "family": "Yang",
+          "sequence": "first",
+          "affiliation": [],
+          "role": [
+            {
+              "vocabulary": "crossref",
+              "role": "author"
+            }
+          ]
+        },
+        {
+          "given": "Xiao-Yang",
+          "family": "Liu",
+          "sequence": "additional",
+          "affiliation": [],
+          "role": [
+            {
+              "vocabulary": "crossref",
+              "role": "author"
+            }
+          ]
+        },
+        {
+          "given": "Christina Dan",
+          "family": "Wang",
+          "sequence": "additional",
+          "affiliation": [],
+          "role": [
+            {
+              "vocabulary": "crossref",
+              "role": "author"
+            }
+          ]
+        }
+      ],
+      "published": {
+        "date-parts": [
+          [
+            2023
+          ]
+        ]
+      },
+      "abstract": "<jats:p>Large language models (LLMs) have shown the potential of revolutionizing natural language processing in diverse domains, sparking great interest in finance. However, the finance domain presents unique challenges, including high temporal sensitivity, constant dynamism, and a low signal-to-noise ratio (SNR). While proprietary models like BloombergGPT have taken advantage of their unique data accumulation, such privileged access calls for an open-source alternative to democratize internet-scale financial data.&lt;br&gt;&lt;br&gt;In this paper, we present an open-source large language model, FinGPT, for the finance sector. Unlike proprietary models, FinGPT takes a data-centric approach, providing researchers and practitioners with accessible and transparent resources to customize their financial LLMs (FinLLMs). We highlight the importance of an automatic data curation pipeline and the lightweight low-rank adaptation technique in building FinGPT. Furthermore, we will showcase potential applications as stepping stones for users, such as robo-advising and sentiment analysis. Through collaborative efforts within the open-source AI4Finance community, FinGPT aims to stimulate innovation, democratize FinLLMs, and unlock new opportunities in open finance. Two associated code repos are \\url{https://github.com/AI4Finance-Foundation/FinGPT} and \\url{https://github.com/AI4Finance-Foundation/FinNLP}</jats:p>",
+      "container-title": null
+    },
+    "R17": {
+      "working_paper": {
+        "DOI": "10.2139/ssrn.4412788",
+        "title": [
+          "Can ChatGPT Forecast Stock Price Movements? Return Predictability and Large Language Models"
+        ],
+        "author": [
+          {
+            "ORCID": "https://orcid.org/0000-0002-5133-7776",
+            "authenticated-orcid": true,
+            "given": "Alejandro",
+            "family": "Lopez-Lira",
+            "sequence": "first",
+            "affiliation": [],
+            "role": [
+              {
+                "vocabulary": "crossref",
+                "role": "author"
+              }
+            ]
+          },
+          {
+            "ORCID": "https://orcid.org/0000-0001-7288-2995",
+            "authenticated-orcid": true,
+            "given": "Yuehua",
+            "family": "Tang",
+            "sequence": "additional",
+            "affiliation": [],
+            "role": [
+              {
+                "vocabulary": "crossref",
+                "role": "author"
+              }
+            ]
+          }
+        ],
+        "published": {
+          "date-parts": [
+            [
+              2023
+            ]
+          ]
+        },
+        "abstract": "<jats:p>&lt;div&gt;\n We document the capability of large language models (LLMs) like ChatGPT to predict stock market reactions from news headlines without direct financial training. Using post-knowledge-cutoff headlines, GPT-4 captures initial market responses, achieving approximately 90% portfolio-day hit rates for the non-tradable initial reaction. GPT-4 scores also significantly predict the subsequent drift, especially for small stocks and negative news. Forecasting ability generally increases with model size, suggesting that financial reasoning is an emerging capacity of complex LLMs. Strategy returns decline as LLM adoption rises, consistent with improved price efficiency. To rationalize these findings, we develop a theoretical model that incorporates LLM technology, information-processing capacity constraints, underreaction, and limits to arbitrage.&amp;nbsp;\n&lt;/div&gt;\n&lt;div&gt;\n &lt;br&gt;\n&lt;/div&gt;</jats:p>",
+        "container-title": null
+      },
+      "journal_metadata_only": {
+        "DOI": "10.1016/j.jfineco.2026.104335",
+        "title": [
+          "Can ChatGPT forecast stock price movements? Return predictability and large language models"
+        ],
+        "author": [
+          {
+            "ORCID": "https://orcid.org/0000-0002-5133-7776",
+            "authenticated-orcid": false,
+            "given": "Alejandro",
+            "family": "Lopez-Lira",
+            "sequence": "first",
+            "affiliation": [],
+            "role": [
+              {
+                "vocabulary": "crossref",
+                "role": "author"
+              }
+            ]
+          },
+          {
+            "ORCID": "https://orcid.org/0000-0001-7288-2995",
+            "authenticated-orcid": false,
+            "given": "Yuehua",
+            "family": "Tang",
+            "sequence": "additional",
+            "affiliation": [],
+            "role": [
+              {
+                "vocabulary": "crossref",
+                "role": "author"
+              }
+            ]
+          }
+        ],
+        "published": {
+          "date-parts": [
+            [
+              2026,
+              10
+            ]
+          ]
+        },
+        "abstract": null,
+        "container-title": [
+          "Journal of Financial Economics"
+        ]
+      }
+    },
+    "R18": {
+      "DOI": "10.2139/ssrn.4905533",
+      "title": [
+        "Does sentiment help in asset pricing? A novel approach using large language models and market-based labels"
+      ],
+      "author": [
+        {
+          "ORCID": "https://orcid.org/0009-0004-4477-6641",
+          "authenticated-orcid": true,
+          "given": "Jule",
+          "family": "Schuettler",
+          "sequence": "first",
+          "affiliation": [],
+          "role": [
+            {
+              "vocabulary": "crossref",
+              "role": "author"
+            }
+          ]
+        },
+        {
+          "ORCID": "https://orcid.org/0000-0002-2038-9362",
+          "authenticated-orcid": true,
+          "given": "Francesco",
+          "family": "Audrino",
+          "sequence": "additional",
+          "affiliation": [],
+          "role": [
+            {
+              "vocabulary": "crossref",
+              "role": "author"
+            }
+          ]
+        },
+        {
+          "given": "Fabio",
+          "family": "Sigrist",
+          "sequence": "additional",
+          "affiliation": [],
+          "role": [
+            {
+              "vocabulary": "crossref",
+              "role": "author"
+            }
+          ]
+        }
+      ],
+      "published": {
+        "date-parts": [
+          [
+            2024
+          ]
+        ]
+      },
+      "abstract": "<jats:p>We present a novel approach to sentiment analysis in financial markets by using a state-of-the-art large language model, a market data-driven labeling approach, and a large dataset consisting of diverse financial text sources including earnings call transcripts, newspapers, and social media tweets. Based on our approach, we define a predictive high-low sentiment asset pricing factor which is significant in explaining cross-sectional asset pricing for U.S. stocks. Further, we find that a long/short equal-weighted portfolio yields an average annualized return of 35.56% and an annualized Sharpe ratio of 2.21. The profitability is primarily driven by the short leg and remains substantial even after accounting for transaction costs.&amp;nbsp;A comparison with an alternative financial sentiment analysis tool (FinBERT) underscores the superiority of our data-driven labeling approach over traditional human-annotated labeling.</jats:p>",
+      "container-title": []
+    }
+  },
+  "primary_reads": [
+    {
+      "url": "https://www.nber.org/papers/w24458",
+      "read_scope": "abstract and publication information",
+      "extracted_text_sha256": "8321f1b4efe019233ed090f520300b1f7d05429e90dfa3d501cd20d89dc513aa"
+    },
+    {
+      "url": "https://www.nber.org/papers/w15940",
+      "read_scope": "abstract and publication information",
+      "extracted_text_sha256": "9f281e9306a76f35622686c9aac8692daa063dfdff9e1be057aae6ccbf62acfd"
+    },
+    {
+      "url": "https://arxiv.org/html/2304.07619v6",
+      "read_scope": "abstract, methods and limitations sections",
+      "extracted_text_sha256": "cc339be8e50b507a605c465100c78d700e0d0d466b19cd741edcebe17ade1a03"
+    },
+    {
+      "url": "https://arxiv.org/html/2306.06031v2",
+      "read_scope": "abstract, methods and limitations sections",
+      "extracted_text_sha256": "943e1929a84aab427f0a7dedf9f5a0f891c042f37958f915da105ccae58cfdf1"
+    }
+  ],
+  "excluded": [
+    {
+      "candidate": "10.1016/j.jfineco.2018.11.001",
+      "reason": "Verified title is Policy externalities and banking integration, not Size and Value in China"
+    },
+    {
+      "candidate": "https://arxiv.org/abs/1407.2588",
+      "reason": "Verified title is Turan Problems and Shadows III: expansions of graphs; unrelated"
+    },
+    {
+      "candidate": "10.21314/jcf.2017.322",
+      "reason": "HTTP 404; not relied on"
+    }
+  ]
+}

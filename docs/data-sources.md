@@ -11,18 +11,22 @@ AxData is used only as an **endpoint/field reference**. AlphaK does not install
 or run AxData, does not copy its research-only source code, and does not add its
 Python/DuckDB/Parquet runtime.
 
-## Dataset-level priority (first batch)
+## Dataset-level priority (current runtime)
 
 Priority is configured per dataset. There is no single shared fallback chain.
 
-| Dataset | Primary | Secondary | First-batch scope |
-| --- | --- | --- | --- |
-| `quote_daily` | Tencent | Eastmoney | 3 stocks × 5 trading days |
-| `snapshot` | Tencent | Eastmoney | same stocks + 2 indices |
-| `index_quote` | Tencent | Eastmoney | SSE Composite, CSI 300 |
+| Dataset | Primary | Secondary | Tertiary | Current scope |
+| --- | --- | --- | --- | --- |
+| `quote_daily` | Tencent | Eastmoney | Sina (raw only, no qfq) | imported stocks + watchlist |
+| `snapshot` | Tencent | Eastmoney | Sina | imported stocks + 5 indices |
+| `index_quote` | Tencent | Eastmoney | Sina | SSE Composite, CSI 300, CSI 500, SZ Component, ChiNext |
 
-Sina is a cross-check source, not part of the first-batch priority. CNINFO is for
-financial/announcement data in a later batch. TDX is deferred.
+The market page reads only non-demo rows. The background loop refreshes snapshots
+every 60 seconds, history every 15 minutes, minute bars/metrics every 60 seconds,
+and sector/popularity/news caches every 60 seconds. Missing stock history is
+fetched on first detail load (last year, bounded retry).
+
+CNINFO is for financial/announcement data in a later batch. TDX is deferred.
 
 The priority was set after the 2026-10-21/22 live sample: Tencent returned
 consistently, while Eastmoney daily/snapshot began returning
@@ -37,11 +41,11 @@ and can be promoted again after a clean probe.
 - Tencent daily: 5 rows, ~255 ms, close `1309.69`, volume `33514` (lots).
 - Tencent snapshot: date `2026-10-21`, close `1309.69`, amount `4,403,820,000`.
 - Eastmoney snapshot: intermittent empty reply; the client falls back to the last
-  completed daily bar within the same source, and then to Tencent if needed.
+  completed daily bar within the same source, and then to Tencent/Sina if needed.
 - Sina daily/index/quote were reachable; Sina volume is shares (multiply by 100
   when comparing with Eastmoney/Tencent lots).
 - CNINFO home was reachable; its announcement API needs a correct POST body and
-  is out of the first-batch scope.
+  is out of the current cache batch.
 
 The sample is not a stability guarantee. A source is only marked healthy after a
 successful response with parseable rows and passing quality checks.
@@ -105,3 +109,15 @@ dataset.
 - [x] No credentials in logs, API responses, or git.
 - [ ] Per-upstream ToS/robots/redistribution review recorded (10.8).
 - [x] Source can be disabled without breaking cached read paths.
+
+### 大盘涨跌分布（2026-10-22）
+
+- `GET /api/v1/market/breadth`：返回标准 envelope；其中 `data` 包含 `{ data: MarketBreadth | null, stale, error }`。
+- 上游为乐咕乐股 `/stockdata/market-activity` 聚合页面（与 AKShare `stock_market_activity_legu()` 同源），不拉取全市场个股，也不执行全市场扫描。
+- `MarketBreadth` 包含 `advance/decline/flat/suspended/limit_up/limit_down/as_of/source/scope`。页面主标题为“大盘”，范围说明在提示中保留；不声称已验证北交所覆盖。
+- 缓存存于 SQLite `live_cache`，成功结果缓存 120 秒；失败后 30 秒再试，保留上次成功数据，重启后可恢复。备用 hostname 只解决同源连接问题，不代表独立上游容灾。
+- 前端每 30 秒查询缓存；上涨占比的分母为上涨 + 下跌 + 平盘，排除停牌。市场日期与本地样本日期不一致时不显示占比差异，两个统计时间分别标注。
+
+### 腾讯历史日线入口降级（2026-10-22）
+
+历史日线优先使用 `https://proxy.finance.qq.com/ifzqgtimg/appstock/app/fqkline/get`，连接或内容解析失败后尝试原 `https://web.ifzq.gtimg.cn/appstock/app/fqkline/get`。两个入口使用相同的腾讯日线字段及成交量口径，均支持原始日线和前复权日线；本次原入口实测返回 WAF HTML，替代入口成功返回一年范围的日线。仅在取得匹配日期的真实复权价格后计算因子，不以默认因子伪造复权数据。

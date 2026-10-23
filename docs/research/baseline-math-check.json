@@ -1,0 +1,43 @@
+{
+  "type": "constructed_arithmetic_only",
+  "market_data_used": false,
+  "empirical_validation": false,
+  "checks_passed": true,
+  "decision_contract_examples": {
+    "buy_quantity": 300,
+    "buy_cost": 6005,
+    "planned_loss": 480,
+    "joint_scale": 0.75,
+    "rounded_portfolio_risk": 0.0256,
+    "half_reduction_sell": 300
+  },
+  "quality_example": {
+    "total": 71.0,
+    "coverage": 1.0,
+    "contributions": [
+      36.0,
+      21.0,
+      14.0
+    ]
+  },
+  "missing_example": {
+    "total": null,
+    "coverage": 0.65
+  },
+  "relative_reference_contribution": 21.0,
+  "breadth_example": 0.3,
+  "midrank_tie_example": 50,
+  "opposing_text_example": {
+    "mean": 0.0,
+    "disagreement": 1.0
+  },
+  "conditional_breadth_effect_example": [
+    0.01,
+    -0.01
+  ],
+  "covariance_example": {
+    "delta": 0.5,
+    "determinant": 0.0029749999999999998,
+    "portfolio_variance": 0.045
+  }
+}

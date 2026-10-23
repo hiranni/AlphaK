@@ -180,7 +180,8 @@ pub fn init_db(path: &str) -> rusqlite::Result<Connection> {
         CREATE TABLE IF NOT EXISTS watchlist_group (
             id TEXT PRIMARY KEY,
             name TEXT NOT NULL,
-            sort INTEGER NOT NULL DEFAULT 0
+            sort INTEGER NOT NULL DEFAULT 0,
+            color TEXT NOT NULL DEFAULT '#8a8175'
         );
 
         CREATE TABLE IF NOT EXISTS watchlist_item (
@@ -316,10 +317,12 @@ pub fn init_db(path: &str) -> rusqlite::Result<Connection> {
         "#,
     )?;
 
+    crate::workbench::init(&conn)?;
     migrate_financial_report(&conn)?;
     migrate_data_job(&conn)?;
     migrate_quote_staging(&conn)?;
     migrate_source_columns(&conn)?;
+    migrate_watchlist_group(&conn)?;
 
     let count: i64 = conn.query_row("SELECT COUNT(*) FROM instruments", [], |r| r.get(0))?;
     if count == 0 {
@@ -338,7 +341,23 @@ pub fn init_db(path: &str) -> rusqlite::Result<Connection> {
         "INSERT OR IGNORE INTO data_source_config (id, provider, enabled, base_url, secret_env, updated_at) VALUES ('mock', 'mock', 1, '', '', ?1)",
         rusqlite::params![now_iso()],
     )?;
+    migrate_watchlist_collection(&conn)?;
     Ok(conn)
+}
+
+/// Permanent collection independent of user-created groups. Existing memberships and
+/// their notes remain intact; the collection gets one stable row per symbol.
+pub const WATCHLIST_ALL: &str = "watchlist-all";
+
+fn migrate_watchlist_collection(conn: &Connection) -> rusqlite::Result<()> {
+    let tx = conn.unchecked_transaction()?;
+    tx.execute("INSERT OR IGNORE INTO watchlist_group (id,name,sort,color) VALUES (?1,'全部自选',-1,'#8a8175')", [WATCHLIST_ALL])?;
+    tx.execute(
+        "INSERT OR IGNORE INTO watchlist_item (id,group_id,symbol,note,sort,created_at)
+         SELECT 'all-' || w.symbol, ?1, w.symbol, w.note, w.sort, w.created_at
+         FROM watchlist_item w WHERE w.group_id <> ?1
+         ORDER BY w.created_at,w.sort,w.id", [WATCHLIST_ALL])?;
+    tx.commit()
 }
 
 fn migrate_financial_report(conn: &Connection) -> rusqlite::Result<()> {
@@ -413,6 +432,20 @@ fn migrate_data_job(conn: &Connection) -> rusqlite::Result<()> {
         "CREATE UNIQUE INDEX IF NOT EXISTS idx_data_job_key ON data_job(idempotency_key)",
         [],
     )?;
+    Ok(())
+}
+
+fn migrate_watchlist_group(conn: &Connection) -> rusqlite::Result<()> {
+    let columns = conn
+        .prepare("PRAGMA table_info(watchlist_group)")?
+        .query_map([], |row| row.get::<_, String>(1))?
+        .collect::<rusqlite::Result<Vec<_>>>()?;
+    if !columns.iter().any(|column| column == "color") {
+        conn.execute(
+            "ALTER TABLE watchlist_group ADD COLUMN color TEXT NOT NULL DEFAULT '#8a8175'",
+            [],
+        )?;
+    }
     Ok(())
 }
 

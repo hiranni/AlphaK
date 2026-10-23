@@ -46,7 +46,7 @@ export type IndexDetail = { code: string; name: string; close: number; change_po
 export type SectorDetail = { id: number; name: string; sector_type: string; change_pct: number; members: MemberRow[] };
 
 export type WatchlistItem = { id: string; symbol: string; name: string; note: string; sort: number; close: number; change_pct: number; as_of: string; source?: string };
-export type WatchlistGroup = { id: string; name: string; sort: number; items: WatchlistItem[] };
+export type WatchlistGroup = { id: string; name: string; color: string; sort: number; items: WatchlistItem[] };
 export type Settings = { theme: string; up_color: string; default_home: string; timezone: string; density: string; poll_interval: number };
 export type DataJob = { id: string; dataset: string; status: string; progress: number; message: string; started_at: string; finished_at: string | null };
 export type QualityReport = { dataset: string; coverage: number; missing: number; duplicates: number; anomalies: number; updated_at: string };
@@ -57,3 +57,19 @@ export type SourceFreshness = { dataset: string; status: "fresh" | "partial" | "
 export type SourcePolicy = { dataset: string; priority: { id: string; label: string }[] };
 export type SourceRetry = { dataset: string; symbol: string; start: string; end: string; attempts: number; last_error: string };
 export type SourceStatus = { policies: SourcePolicy[]; health: SourceHealth[]; freshness: SourceFreshness[]; retry_queue: SourceRetry[]; mock_fallback: boolean };
+
+export type WatchSignal = { kind: string; title: string; evidence: string; invalidation: string; risk: string };
+export type WatchAnalysis = {
+  symbol: string; name: string; industry: string; as_of: string; source: string;
+  status: "ready" | "stale" | "missing" | "demo"; notice: string;
+  close: number | null; change: number | null; change_pct: number | null;
+  volume: number | null; amount: number | null; score: number | null; trend: string;
+  volatility: number | null; volume_ratio: number | null; support: number | null;
+  resistance: number | null; ma20: number | null; ma60: number | null;
+  sparkline: number[]; signals: WatchSignal[]; bars_count: number; technical_bars_count: number; history_status: string; history_start: string;
+};
+export type WatchWorkbench = { generated_at: string; expected_session: string; analyses: WatchAnalysis[] };
+export type WatchAlertInput = { symbol: string; kind: string; threshold: number; cooldown_minutes: number; enabled: boolean };
+export type WatchAlertRule = WatchAlertInput & { id: string; last_triggered_at: string | null };
+export type WatchAlertEvent = { id: number; rule_id: string; symbol: string; message: string; as_of: string; created_at: string };
+export type WatchAlerts = { rules: WatchAlertRule[]; events: WatchAlertEvent[] };

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Activity, Database, Search, Settings, Star, Command } from "lucide-react";
+import { Activity, Database, Search, Settings, Star, Command, FlaskConical, Wallet } from "lucide-react";
 import { SearchPalette } from "./SearchPalette";
 import { api } from "../api";
 import brandLogo from "../../../../logo.svg";
@@ -11,6 +11,8 @@ const nav = [
   { to: "/watchlist", label: "自选", icon: Star },
   { to: "/data", label: "数据", icon: Database },
   { to: "/settings", label: "设置", icon: Settings },
+  { to: "/quant", label: "量化", icon: FlaskConical },
+  { to: "/trading", label: "实盘", icon: Wallet },
 ];
 
 export function Shell() {

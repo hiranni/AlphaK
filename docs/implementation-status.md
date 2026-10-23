@@ -2,10 +2,10 @@
 
 | Field | Value |
 | --- | --- |
-| Date | 2026-10-21 |
+| Date | 2026-10-22 |
 | Change | `alphak-platform-mvp` |
 | Progress | 100 / 111 tasks |
-| Demo data | Yes — 13 A-share instruments, 260 synthetic trading days |
+| Demo data | Seed retained for bootstrap; market APIs exclude demo rows and use live public-source data |
 
 ## Implemented
 
@@ -18,11 +18,15 @@
 - Backup/restore scripts with SHA-256 and SQLite integrity check.
 - Financial report immutable versions + point-in-time query (seeded correction for 600519).
 - Sync job state machine/idempotency, quality recomputation, market snapshot cache.
+- Live cache: 60s snapshots, 60s minute lines/metrics, 15m history refresh, scoped retry queue and source cooldown.
+- Market page filters demo rows; sector heat, popularity, and news are served from Eastmoney/Sina fallbacks with stale timestamps.
 - Adapter trait + offline mock fixture, symbol normalization, qfq/hfq adjustment.
+- Packaged runtime: `make build` → `dist/alphak/`, `scripts/start.sh` / `stop.sh`, pre-migration backup.
+- Financial/profile/valuation supplement endpoints with independent retry and cache TTLs.
 - OpenAPI 3.1 endpoint + generated TypeScript client, watchlist rename/drag reorder/refresh/field preferences.
 - Virtual scrolling for 500-row watchlists; volume moving averages and golden indicator tests.
 - Bars qfq/hfq now applied before aggregation/indicators; as_of bounds reports, indicators, valuation; board-specific limit rules; trailing 52-week window; restore validates checksum/schema and rolls back.
-- Tests: 62 Rust tests; frontend `tsc + vite build` passes; 10 Playwright E2E tests (including request-race, CSV round-trip, settings, chart sync, retry, OpenAPI contract, 500-row windowing).
+- Tests: 77 Rust tests; frontend `tsc + vite build` passes; 10 Playwright E2E tests (including request-race, CSV round-trip, settings, chart sync, retry, OpenAPI contract, 500-row windowing).
 
 ## Intentional deviations (reported)
 
@@ -30,7 +34,7 @@
 - Frontend is **Vite + React + hand-written CSS**, not Next.js/Tailwind/shadcn (user allowed random frontend).
 - SQLite is the only database; no PostgreSQL/TimescaleDB/Redis.
 - Direct host run; no Docker. Single-process scheduler; no Redis/Worker.
-- Tencent/Eastmoney public-source clients exist for daily/snapshot/index; default UI still uses the deterministic demo seed unless a source sync is triggered.
+- Tencent/Eastmoney/Sina public-source clients exist for daily/snapshot/index; market and stock pages filter demo rows and rely on the live cache. Demo seed remains only as bootstrap data.
 - OpenAPI client is generated for market overview; other endpoints remain hand-typed until the spec gains full response schemas.
 
 ## Not implemented (remaining 11 tasks)
