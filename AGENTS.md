@@ -23,3 +23,5 @@
   `openspec-archive-change`. DSH has no `/opsx` command; use the skill names.
 - Design/UI work: load the `hallmark` skill (`.dsh/skills/hallmark/`). Its
   output is real project files, not `schemaJson` cards.
+
+- Persistence changes MUST update `openspec/changes/data-retention-and-sqlite-performance/design.md`: lifecycle tables AND structural contract. Any table/column/index/constraint or retention-policy addition/change/removal requires `make persistence-doc-update`, manual review of retention/cleanup rules, and `make harness`. The harness probes a migrated in-memory DB and compares schema/policy fingerprints with the document. Build and CI enforce it. Never bypass it by deleting registrations or editing only fingerprints.

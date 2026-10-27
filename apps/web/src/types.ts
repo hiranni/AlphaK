@@ -52,7 +52,7 @@ export type DataJob = { id: string; dataset: string; status: string; progress: n
 export type QualityReport = { dataset: string; coverage: number; missing: number; duplicates: number; anomalies: number; updated_at: string };
 export type Health = { status: string; app: string; database: string; last_sync: string | null; is_demo: boolean };
 
-export type SourceHealth = { source: "eastmoney" | "tencent" | "sina"; available: boolean; failures: number; cooldown_seconds: number; last_success_at: string | null; last_error: string | null };
+export type SourceHealth = { source: "axdata" | "eastmoney" | "tencent" | "sina"; available: boolean; failures: number; cooldown_seconds: number; last_success_at: string | null; last_error: string | null };
 export type SourceFreshness = { dataset: string; status: "fresh" | "partial" | "stale"; last_success_at: string | null; last_source: string | null; last_batch_id: string | null; last_error: string | null; updated_at: string };
 export type SourcePolicy = { dataset: string; priority: { id: string; label: string }[] };
 export type SourceRetry = { dataset: string; symbol: string; start: string; end: string; attempts: number; last_error: string };
@@ -73,3 +73,5 @@ export type WatchAlertInput = { symbol: string; kind: string; threshold: number;
 export type WatchAlertRule = WatchAlertInput & { id: string; last_triggered_at: string | null };
 export type WatchAlertEvent = { id: number; rule_id: string; symbol: string; message: string; as_of: string; created_at: string };
 export type WatchAlerts = { rules: WatchAlertRule[]; events: WatchAlertEvent[] };
+
+export type RealtimeQuote = { symbol: string; close: number; pre_close: number; change_pct: number; volume: number; amount: number; updated_at: string | null; provider_time: string | null; last_checked_at: string; time_status: "unknown"; source: string };

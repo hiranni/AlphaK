@@ -135,12 +135,12 @@ mod tests {
         let conn = crate::db::init_db(":memory:").unwrap();
         let bad = bar("2026-10-22", 1500.0, 1490.0);
         assert_eq!(stage_quotes(&conn, &[bad], "b1").unwrap().rejected, 1);
-        let good = bar("2026-10-22", 1500.0, 1510.0);
+        let good = bar("2099-01-02", 1500.0, 1510.0);
         assert_eq!(stage_quotes(&conn, &[good], "b1").unwrap().accepted, 1);
         promote_valid_quotes(&conn, "b1").unwrap();
         let high: f64 = conn
             .query_row(
-                "SELECT high FROM quote_daily WHERE symbol = '600519.SH' AND trade_date = '2026-10-22'",
+                "SELECT high FROM quote_daily WHERE symbol = '600519.SH' AND trade_date = '2099-01-02'",
                 [],
                 |r| r.get(0),
             )
@@ -151,27 +151,27 @@ mod tests {
     #[test]
     fn valid_payload_can_be_corrected_then_rejected() {
         let conn = crate::db::init_db(":memory:").unwrap();
-        let first = bar("2026-10-23", 1500.0, 1510.0);
+        let first = bar("2099-01-03", 1500.0, 1510.0);
         assert_eq!(stage_quotes(&conn, &[first], "b2").unwrap().accepted, 1);
-        let corrected = bar("2026-10-23", 1505.0, 1510.0);
+        let corrected = bar("2099-01-03", 1505.0, 1510.0);
         assert_eq!(stage_quotes(&conn, &[corrected], "b2").unwrap().accepted, 1);
         promote_valid_quotes(&conn, "b2").unwrap();
         let close: f64 = conn
             .query_row(
-                "SELECT close FROM quote_daily WHERE symbol = '600519.SH' AND trade_date = '2026-10-23'",
+                "SELECT close FROM quote_daily WHERE symbol = '600519.SH' AND trade_date = '2099-01-03'",
                 [],
                 |r| r.get(0),
             )
             .unwrap();
         assert_eq!(close, 1505.0);
 
-        let rejected = bar("2026-10-24", 1500.0, 1490.0);
+        let rejected = bar("2099-01-04", 1500.0, 1490.0);
         assert_eq!(stage_quotes(&conn, &[rejected], "b3").unwrap().rejected, 1);
         let promoted = promote_valid_quotes(&conn, "b3").unwrap();
         assert_eq!(promoted, 0);
         let count: i64 = conn
             .query_row(
-                "SELECT COUNT(*) FROM quote_daily WHERE symbol = '600519.SH' AND trade_date = '2026-10-24'",
+                "SELECT COUNT(*) FROM quote_daily WHERE symbol = '600519.SH' AND trade_date = '2099-01-04'",
                 [],
                 |r| r.get(0),
             )
@@ -205,8 +205,8 @@ mod tests {
     fn bad_rows_stay_out_of_quote_daily() {
         let conn = crate::db::init_db(":memory:").unwrap();
         let bars = vec![
-            bar("2026-10-22", 1500.0, 1510.0),
-            bar("2026-10-23", 1500.0, 1490.0),
+            bar("2099-01-02", 1500.0, 1510.0),
+            bar("2099-01-03", 1500.0, 1490.0),
         ];
         let report = stage_quotes(&conn, &bars, "b4").unwrap();
         assert_eq!(report.accepted, 1);
@@ -215,14 +215,14 @@ mod tests {
         assert_eq!(promoted, 1);
         let good: i64 = conn
             .query_row(
-                "SELECT COUNT(*) FROM quote_daily WHERE symbol = '600519.SH' AND trade_date = '2026-10-22'",
+                "SELECT COUNT(*) FROM quote_daily WHERE symbol = '600519.SH' AND trade_date = '2099-01-02'",
                 [],
                 |r| r.get(0),
             )
             .unwrap();
         let bad: i64 = conn
             .query_row(
-                "SELECT COUNT(*) FROM quote_daily WHERE trade_date = '2026-10-23'",
+                "SELECT COUNT(*) FROM quote_daily WHERE symbol = '600519.SH' AND trade_date = '2099-01-03'",
                 [],
                 |r| r.get(0),
             )

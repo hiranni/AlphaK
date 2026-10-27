@@ -6,6 +6,8 @@ import { Stock } from "./pages/Stock";
 import { Watchlist } from "./pages/Watchlist";
 import { DataAdmin } from "./pages/DataAdmin";
 import { Settings } from "./pages/Settings";
+import { IndexChart } from "./pages/IndexChart";
+import { BreadthDetail } from "./pages/BreadthDetail";
 import { MarketDetail } from "./pages/MarketDetail";
 import { NotFound } from "./pages/NotFound";
 
@@ -15,7 +17,8 @@ export default function App() {
       <Route element={<Shell />}>
         <Route index element={<Dashboard />} />
         <Route path="stock/:symbol" element={<Stock />} />
-        <Route path="index/:code" element={<MarketDetail kind="index" />} />
+        <Route path="index/:code" element={<IndexChart />} />
+        <Route path="market/breadth" element={<BreadthDetail />} />
         <Route path="sector/:id" element={<MarketDetail kind="sector" />} />
         <Route path="watchlist" element={<Watchlist />} />
         <Route path="quant" element={<StrategyModule />}>

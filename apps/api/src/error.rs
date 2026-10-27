@@ -68,6 +68,17 @@ impl IntoResponse for AppError {
 
 impl From<rusqlite::Error> for AppError {
     fn from(err: rusqlite::Error) -> Self {
-        AppError::internal(format!("database error: {err}"))
+        if matches!(
+            err.sqlite_error_code(),
+            Some(rusqlite::ErrorCode::DatabaseBusy | rusqlite::ErrorCode::DatabaseLocked)
+        ) {
+            AppError::new(
+                StatusCode::SERVICE_UNAVAILABLE,
+                "DB_BUSY",
+                "数据库繁忙，请稍后重试",
+            )
+        } else {
+            AppError::internal(format!("database error: {err}"))
+        }
     }
 }

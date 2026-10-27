@@ -436,3 +436,11 @@ Before submitting a strategy or decision, an Agent **MUST** verify:
 - [ ] Replay is read-only and never creates orders.
 - [ ] Expired bundles return `CACHE_EXPIRED`; cleanup leaves NAV/trades intact.
 - [ ] Invalid or uncertain output results in `hold` or `skip`, never a guessed order.
+
+## 研究监控切片 research-monitor-1
+
+量化页面的首批内建策略当前运行模式是 signal_observation；契约见 `research-monitor.schema.json`。它与 `strategy.schema.json` 的可交易策略区分，不能提交订单、不能声称回测或模拟收益。定义在创建时冻结，启停仅影响后续观察；观察包包含完整输入和 SHA256 指纹。代码入口 `apps/api/src/quant.rs`；接口 /api/v1/quant/{strategies,seed,run,observations}。
+
+## 研究模型计算目录 research-contract-1
+
+`research/model-calculation-contracts.json` 是8个模型的结构化计算说明，包含inputs/features/fit/gate/integration/context与实现状态。它不是运行器DSL，也不能替代strategy或strategy-instance执行schema。详细阶段接口和实现差距见 `../research/quant-engine-calculation-contract.md`。前端对应 `apps/web/src/data/quantEngineContracts.ts`；变更须同步两份内容。

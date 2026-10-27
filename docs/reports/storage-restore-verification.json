@@ -1,0 +1,127 @@
+{
+  "source": "read-only online copy",
+  "data_preserved": true,
+  "integrity": "ok",
+  "foreign_keys": "ok",
+  "maintenance": true,
+  "auto_cleanup": false,
+  "pre_restore_backup_verified": true,
+  "table_checks": {
+    "instruments": {
+      "rows": 223,
+      "sha256": "ecda85666ed58d7927c83ab8b3e7387fad8bd9921824efae0aa37c7c54b92c58"
+    },
+    "trading_calendar": {
+      "rows": 260,
+      "sha256": "f9e9838ab093124d1ac22131d6a6425297e11c5a477eb37972a56da3498d6de1"
+    },
+    "quote_daily": {
+      "rows": 13550,
+      "sha256": "8860f19d7d99436985f30f774bac744d85351dd7fb199a752047061a68e17a53"
+    },
+    "financial_report": {
+      "rows": 66,
+      "sha256": "6a1ef9dbad4c9830c91495f9f4fa4156a28f3bfe203a053de6cbb8c8406e7c4a"
+    },
+    "financial_indicator": {
+      "rows": 65,
+      "sha256": "5b75386382c3c5299e4540e378b28ae0bf24f7b2bb0af0bdf63da040fef4a2ce"
+    },
+    "quote_staging": {
+      "rows": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "daily_basic": {
+      "rows": 3380,
+      "sha256": "34b96ddcb56d4eea0344b00c964f07f422d6ee405a7d1dbf9e128d244d5335fb"
+    },
+    "company_profile": {
+      "rows": 13,
+      "sha256": "802452be8c2e2e4c508f572fd47aa741bac5d74c606c374e57b8b1dba95c8583"
+    },
+    "index_catalog": {
+      "rows": 5,
+      "sha256": "b8614473ca0744c67a7a844f7740967836d80275df0bd5144e03a760e876dcc3"
+    },
+    "index_quote": {
+      "rows": 63,
+      "sha256": "ec175fc0ea413662b4965675de1df99ae217a20ff1d7156d724ecea78d6ed3bb"
+    },
+    "index_member": {
+      "rows": 37,
+      "sha256": "34221b512f09e8e7a38368b90163e67ca6fe4bfd7c4db4da48a5491fb3790388"
+    },
+    "sector_catalog": {
+      "rows": 9,
+      "sha256": "50c4230b085a39e07b42413d3d50e8334fcb58ee0f465a424f5a7e75888888d2"
+    },
+    "sector_member": {
+      "rows": 13,
+      "sha256": "357cb9342ab7bd6b64f93a1bdf39853f7b8d7a5ef125a0cc786c1006b8927e15"
+    },
+    "watchlist_group": {
+      "rows": 6,
+      "sha256": "f892fe83a5e77db97940b3f62dbeaef604a79820cffd4e056a3ddc97a60792d8"
+    },
+    "watchlist_item": {
+      "rows": 82,
+      "sha256": "4f7b4be1571421832d534ada576887ca66accd3172d438628729012b671d8cc8"
+    },
+    "app_setting": {
+      "rows": 6,
+      "sha256": "936752bd428592f9f94a5e00357d7254ef5da67d9e53560570a6f8643289445d"
+    },
+    "data_job": {
+      "rows": 12,
+      "sha256": "3424772141d108fd5e02c6d0a4047fde24bf13e413f9a2384d4ba78cb05422b6"
+    },
+    "market_snapshot": {
+      "rows": 3,
+      "sha256": "bcb75ac0031f9a9d6950c0d3574dd1e39d50bd3c86173bfad90901d0c48c132e"
+    },
+    "quote_snapshot": {
+      "rows": 126,
+      "sha256": "f6c348ce5700f88a20fb7a095f1ce07b6e39f28f87c68a49258eedfcd6bbc867"
+    },
+    "source_retry_task": {
+      "rows": 3,
+      "sha256": "7918b79c34fb749f6f0d087548c32ba5a5a275db716cf6e9dc150cf51c6fd7a3"
+    },
+    "data_freshness": {
+      "rows": 3,
+      "sha256": "a010ea968d163cf771d722b8eea67f4279651daac493c4c3f57ecd891975caa7"
+    },
+    "data_source_config": {
+      "rows": 2,
+      "sha256": "b8c48d022d29d9dc6a4f08b02af6b662b6a0c21d6cdfb48d723715a30b0d8510"
+    },
+    "sync_checkpoint": {
+      "rows": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "backfill_audit": {
+      "rows": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "reference_correction": {
+      "rows": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "quality_report": {
+      "rows": 7,
+      "sha256": "a1774c7c9e0a8929e4ad15f7324f81e8b1273b33bb1e8cb48010376d5c8686f1"
+    },
+    "live_cache": {
+      "rows": 300,
+      "sha256": "711689a30802c24e5637c1a33fd7e809a9c197b17e068a66e3029a8553349423"
+    },
+    "watch_alert": {
+      "rows": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "watch_alert_event": {
+      "rows": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    }
+  }
+}

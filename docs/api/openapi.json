@@ -985,6 +985,709 @@
           }
         }
       }
+    },
+    "/api/v1/data/retention": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "持久化政策与实际容量诊断",
+        "responses": {
+          "200": {
+            "description": "统一ApiResponse envelope"
+          },
+          "400": {
+            "description": "参数或计划无效"
+          },
+          "503": {
+            "description": "DB_BUSY，保留上次成功数据"
+          }
+        }
+      }
+    },
+    "/api/v1/data/cleanup/preview": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "生成10分钟有效清理计划",
+        "responses": {
+          "200": {
+            "description": "统一ApiResponse envelope"
+          },
+          "400": {
+            "description": "参数或计划无效"
+          },
+          "503": {
+            "description": "DB_BUSY，保留上次成功数据"
+          }
+        },
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/data/cleanup": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "默认dry-run；显式false执行计划",
+        "responses": {
+          "200": {
+            "description": "统一ApiResponse envelope"
+          },
+          "400": {
+            "description": "参数或计划无效"
+          },
+          "503": {
+            "description": "DB_BUSY，保留上次成功数据"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "plan_id"
+                ],
+                "properties": {
+                  "plan_id": {
+                    "type": "string"
+                  },
+                  "dry_run": {
+                    "type": "boolean",
+                    "default": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/data/cleanup/{id}": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "清理执行记录",
+        "responses": {
+          "200": {
+            "description": "统一ApiResponse envelope"
+          },
+          "400": {
+            "description": "参数或计划无效"
+          },
+          "503": {
+            "description": "DB_BUSY，保留上次成功数据"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/data/subscriptions": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "更新30秒订阅租约并返回交易窗口",
+        "responses": {
+          "200": {
+            "description": "统一ApiResponse envelope"
+          },
+          "400": {
+            "description": "参数或计划无效"
+          },
+          "503": {
+            "description": "DB_BUSY，保留上次成功数据"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "client_id",
+                  "symbols",
+                  "dataset"
+                ],
+                "properties": {
+                  "client_id": {
+                    "type": "string",
+                    "maxLength": 100
+                  },
+                  "symbols": {
+                    "type": "array",
+                    "maxItems": 120,
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "dataset": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/data/checkpoint": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "受控PASSIVE检查点",
+        "responses": {
+          "200": {
+            "description": "统一ApiResponse envelope"
+          },
+          "400": {
+            "description": "参数或计划无效"
+          },
+          "503": {
+            "description": "DB_BUSY，保留上次成功数据"
+          }
+        },
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/data/inputs": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "冻结不可变JSON研究输入",
+        "responses": {
+          "200": {
+            "description": "统一ApiResponse envelope"
+          },
+          "400": {
+            "description": "参数或计划无效"
+          },
+          "503": {
+            "description": "DB_BUSY，保留上次成功数据"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "owner",
+                  "source",
+                  "payload"
+                ],
+                "properties": {
+                  "owner": {
+                    "type": "string"
+                  },
+                  "source": {
+                    "type": "string"
+                  },
+                  "available_at": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "date-time"
+                  },
+                  "payload": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/data/inputs/{hash}": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "只读校验冻结输入",
+        "responses": {
+          "200": {
+            "description": "统一ApiResponse envelope"
+          },
+          "400": {
+            "description": "参数或计划无效"
+          },
+          "503": {
+            "description": "DB_BUSY，保留上次成功数据"
+          }
+        },
+        "parameters": [
+          {
+            "name": "hash",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/indices/{code}/bars": {
+      "get": {
+        "summary": "指数真实历史K线（日、月）",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "period",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "daily",
+                "monthly"
+              ],
+              "default": "daily"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "BarsResponse；指数不复权，剔除演示和休市日期"
+          }
+        }
+      }
+    },
+    "/api/v1/market/breadth/history": {
+      "get": {
+        "summary": "大盘与本地样本每日涨跌历史",
+        "responses": {
+          "200": {
+            "description": "sample/market 数组：date、advance、decline、flat；大盘附phase；最多120个日期，仅已有真实观测"
+          }
+        },
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "30min",
+                "1h",
+                "daily",
+                "weekly",
+                "monthly"
+              ],
+              "default": "daily"
+            },
+            "description": "真实观测按周期取最后值；分时仅使用已缓存行情，返回实际覆盖家数及行情样本成分，不回填缺失历史。"
+          }
+        ]
+      }
+    },
+    "/api/v1/trading/research": {
+      "get": {
+        "summary": "List latest 100 immutable research configurations and latest reports; no account ledger",
+        "responses": {
+          "200": {
+            "description": "Envelope of research configurations"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create scoped research configuration; unique models and total weight <= 1 validated in business layer",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "symbols",
+                  "allocations",
+                  "sentiment_scope"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60
+                  },
+                  "symbols": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 8,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "sentiment_scope": {
+                    "type": "string",
+                    "enum": [
+                      "pool",
+                      "market"
+                    ]
+                  },
+                  "allocations": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 8,
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "model_id",
+                        "weight"
+                      ],
+                      "properties": {
+                        "model_id": {
+                          "type": "string",
+                          "enum": [
+                            "ak-state-v1",
+                            "ak-regime-v1",
+                            "ak-continuation-v1",
+                            "ak-repair-v1",
+                            "ak-cooling-v1",
+                            "ak-event-v1",
+                            "ak-quality-v1",
+                            "ak-ensemble-v1"
+                          ]
+                        },
+                        "weight": {
+                          "type": "number",
+                          "exclusiveMinimum": 0,
+                          "maximum": 1
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Envelope containing immutable id"
+          },
+          "400": {
+            "description": "Invalid scope, weights or models"
+          }
+        }
+      }
+    },
+    "/api/v1/trading/research/{id}/analyze": {
+      "post": {
+        "summary": "Manually analyze frozen scoped daily history; research candidates only, no orders",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Frozen research report, including explicit blocked results"
+          },
+          "400": {
+            "description": "Analysis busy or invalid configuration"
+          },
+          "404": {
+            "description": "Configuration not found"
+          }
+        }
+      }
+    },
+    "/api/v1/trading/paper-strategies": {
+      "get": {
+        "summary": "读取模拟资金策略登记（无撮合或真实订单）",
+        "responses": {
+          "200": {
+            "description": "策略配置、冻结交易政策和初始入金余额（人民币分）"
+          }
+        }
+      },
+      "post": {
+        "summary": "幂等初始化策略和模拟资金",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "request_key",
+                  "config",
+                  "initial_cash_fen"
+                ],
+                "properties": {
+                  "request_key": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "initial_cash_fen": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100000000000
+                  },
+                  "config": {
+                    "type": "object",
+                    "description": "研究配置：name、1–8个唯一沪深主板symbols、allocations、sentiment_scope"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "原子创建成功或同参重复请求"
+          },
+          "400": {
+            "description": "配置非法或幂等键冲突"
+          }
+        }
+      }
+    },
+    "/api/v1/trading/paper-strategies/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "patch": {
+        "summary": "归档、恢复或配置换版；保留资金账本及历史报告",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "action"
+                ],
+                "properties": {
+                  "action": {
+                    "enum": [
+                      "archive",
+                      "restore",
+                      "reconfigure"
+                    ]
+                  },
+                  "config": {
+                    "type": "object",
+                    "description": "reconfigure时必填，研究配置合同"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "原子更新成功"
+          },
+          "400": {
+            "description": "非法配置或归档账户禁止换版"
+          },
+          "404": {
+            "description": "账户不存在"
+          }
+        }
+      }
+    },
+    "/api/v1/trading/paper-strategies/{id}/events": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "summary": "账户操作历史",
+        "responses": {
+          "200": {
+            "description": "归档、恢复和新旧配置引用"
+          },
+          "404": {
+            "description": "账户不存在"
+          }
+        }
+      }
+    },
+    "/api/v1/trading/paper-strategies/{id}/execution": {
+      "get": {
+        "summary": "Read account-scoped execution checks, trades, positions and cash ledger",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "API envelope; current production execution_ready=false, no fills are generated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "request_id": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Account not found"
+          }
+        }
+      },
+      "post": {
+        "summary": "Persist idempotent execution readiness checks; does not place orders",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "request_key"
+                ],
+                "properties": {
+                  "request_key": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "API envelope; current production execution_ready=false, no fills are generated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "data",
+                    "request_id"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "request_id": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid key or archived account"
+          },
+          "404": {
+            "description": "Account not found"
+          }
+        }
+      }
     }
   },
   "components": {

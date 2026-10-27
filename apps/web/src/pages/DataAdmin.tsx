@@ -121,7 +121,7 @@ export function DataAdmin() {
             {sources.health.map((source) => (
               <div className={`source-card ${source.available ? "" : "source-card-down"}`} key={source.source}>
                 <div className="source-card-head">
-                  <span>{source.source === "tencent" ? "腾讯" : source.source === "sina" ? "新浪财经" : source.source === "eastmoney" ? "东方财富" : source.source}</span>
+                  <span>{source.source === "tencent" ? "腾讯" : source.source === "sina" ? "新浪财经" : source.source === "eastmoney" ? "东方财富" : source.source === "axdata" ? "AxData" : source.source}</span>
                   <span className={`status-pill ${source.available ? "status-succeeded" : "status-failed"}`}>
                     {source.available ? "可用" : `冷却 ${source.cooldown_seconds}s`}
                   </span>
@@ -142,7 +142,7 @@ export function DataAdmin() {
               </div>
             ))}
           </div>
-          <p className="panel-footnote">行情快照每60秒更新，历史日线每15分钟补齐；腾讯、东方财富、新浪依次切换，每源最多2次。失败范围每分钟重试，最多5次，达到上限后停止并保留上次数据。待处理 {sources.retry_queue.length} 个范围，其中 {sources.retry_queue.filter((task) => task.attempts >= 5).length} 个已达上限，可手动重新同步。分钟线、估值和资料在个股页查看状态及重新补取。</p>
+          <p className="panel-footnote">自选页实时报价每3秒轮询 AxData 批量快照，个股秒K按5秒周期请求 AxData；全市场快照仍每60秒，历史日线每15分钟补齐。腾讯、东方财富、新浪作为直连兜底，每源最多2次。失败范围每分钟重试，最多5次，达到上限后停止并保留上次数据。待处理 {sources.retry_queue.length} 个范围，其中 {sources.retry_queue.filter((task) => task.attempts >= 5).length} 个已达上限，可手动重新同步。分钟线、估值和资料在个股页查看状态及重新补取。</p>
         </section>
       ) : null}
 

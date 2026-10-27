@@ -1,4 +1,4 @@
-use chrono::Local;
+use chrono::{Datelike, Local, NaiveDate};
 use rusqlite::{params, Connection, OptionalExtension};
 
 use crate::db::now_iso;
@@ -62,6 +62,12 @@ pub fn cached(conn: &Connection) -> Result<Option<(MarketOverview, String)>, App
     if snapshot.is_demo || snapshot.source == "demo-seed" || snapshot.source.contains("+demo") {
         return Ok(None);
     }
+    if NaiveDate::parse_from_str(&snapshot.as_of, "%Y-%m-%d")
+        .map(|date| date.weekday().number_from_monday() > 5)
+        .unwrap_or(false)
+    {
+        return Ok(None);
+    }
     Ok(Some((snapshot, computed_at)))
 }
 
@@ -97,7 +103,7 @@ pub fn refresh(conn: &Connection) -> Result<MarketOverview, AppError> {
         |r| r.get(0),
     )?;
     let as_of: String = conn.query_row(
-        "SELECT MAX(trade_date) FROM (SELECT trade_date FROM quote_daily WHERE source <> 'demo' UNION ALL SELECT trade_date FROM index_quote WHERE source <> 'demo')",
+        "SELECT MAX(trade_date) FROM (SELECT trade_date FROM quote_daily WHERE source <> 'demo' UNION ALL SELECT trade_date FROM index_quote WHERE source <> 'demo') d WHERE strftime('%w', trade_date) NOT IN ('0','6') AND NOT EXISTS (SELECT 1 FROM trading_calendar c WHERE c.trade_date=d.trade_date AND c.is_open=0)",
         [], |r| r.get::<_, Option<String>>(0),
     )?.unwrap_or_default();
 
@@ -283,6 +289,29 @@ pub fn refresh(conn: &Connection) -> Result<MarketOverview, AppError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn weekend_rows_do_not_hide_trading_day_samples() {
+        let conn = crate::db::init_db(":memory:").unwrap();
+        conn.execute("UPDATE quote_daily SET source='tencent'", [])
+            .unwrap();
+        conn.execute("UPDATE index_quote SET source='tencent'", [])
+            .unwrap();
+        let before = refresh(&conn).unwrap();
+        conn.execute("UPDATE index_quote SET trade_date='2099-10-25' WHERE rowid=(SELECT MAX(rowid) FROM index_quote)", []).unwrap();
+        // Explicitly closed dates are ignored even if an upstream mislabels a bar.
+        conn.execute(
+            "INSERT OR REPLACE INTO trading_calendar(trade_date,is_open) VALUES('2099-10-25',0)",
+            [],
+        )
+        .unwrap();
+        let after = refresh(&conn).unwrap();
+        assert_eq!(before.as_of, after.as_of);
+        assert_eq!(
+            before.breadth.advance + before.breadth.decline + before.breadth.flat,
+            after.breadth.advance + after.breadth.decline + after.breadth.flat
+        );
+    }
 
     #[test]
     fn limit_rules_follow_board() {

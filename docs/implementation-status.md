@@ -22,11 +22,13 @@
 - Market page filters demo rows; sector heat, popularity, and news are served from Eastmoney/Sina fallbacks with stale timestamps.
 - Adapter trait + offline mock fixture, symbol normalization, qfq/hfq adjustment.
 - Packaged runtime: `make build` → `dist/alphak/`, `scripts/start.sh` / `stop.sh`, pre-migration backup.
+- AxData service at `/Users/ryan/Desktop/Project/AxData` with `.venv`; start/stop via `axdata.sh start|stop|status|restart|logs`.
+- High-frequency paths: watchlist batch snapshots every 3s; stock-detail `5s/15s/30s/60s` AxData seconds K every 5s; no WebSocket.
 - Financial/profile/valuation supplement endpoints with independent retry and cache TTLs.
 - OpenAPI 3.1 endpoint + generated TypeScript client, watchlist rename/drag reorder/refresh/field preferences.
 - Virtual scrolling for 500-row watchlists; volume moving averages and golden indicator tests.
 - Bars qfq/hfq now applied before aggregation/indicators; as_of bounds reports, indicators, valuation; board-specific limit rules; trailing 52-week window; restore validates checksum/schema and rolls back.
-- Tests: 77 Rust tests; frontend `tsc + vite build` passes; 10 Playwright E2E tests (including request-race, CSV round-trip, settings, chart sync, retry, OpenAPI contract, 500-row windowing).
+- Tests: 84 Rust tests; frontend `tsc + vite build` passes; 10 Playwright E2E tests (including request-race, CSV round-trip, settings, chart sync, retry, OpenAPI contract, 500-row windowing).
 
 ## Intentional deviations (reported)
 
@@ -34,7 +36,7 @@
 - Frontend is **Vite + React + hand-written CSS**, not Next.js/Tailwind/shadcn (user allowed random frontend).
 - SQLite is the only database; no PostgreSQL/TimescaleDB/Redis.
 - Direct host run; no Docker. Single-process scheduler; no Redis/Worker.
-- Tencent/Eastmoney/Sina public-source clients exist for daily/snapshot/index; market and stock pages filter demo rows and rely on the live cache. Demo seed remains only as bootstrap data.
+- AxData HTTP provider is primary for daily/index when `AXDATA_API_BASE` is set; Tencent/Eastmoney/Sina remain direct fallbacks. Demo seed remains only as bootstrap data.
 - OpenAPI client is generated for market overview; other endpoints remain hand-typed until the spec gains full response schemas.
 
 ## Not implemented (remaining 11 tasks)

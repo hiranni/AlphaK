@@ -1,0 +1,596 @@
+{
+  "schema_version": "research-contract-1",
+  "execution": "research_only",
+  "max_symbols": 8,
+  "description": "计算契约目录；不是可执行DSL。status区分已接入试验和未实现模型。现行适配器以trading_research.rs为准。",
+  "models": {
+    "ak-state-v1": {
+      "status": "已接入 · 日线试验适配 pilot-gates-1",
+      "inputs": [
+        [
+          "daily_bars",
+          "symbol,date,open,high,low,close,volume,source,fetched_at",
+          "已收盘日线；最多400根、至少180根；同一价格口径，剔除演示及无效OHLCV"
+        ],
+        [
+          "pool_breadth",
+          "date,up_count,total_count,scope",
+          "仅实例内≤8只股票，同日齐备；Bₜ=上涨数/N，平盘计入分母"
+        ],
+        [
+          "research_config",
+          "symbols,model_id,weight,cutoff",
+          "不可变配置；权重>0、总和≤1；北京时间15:10之前不使用当日日线"
+        ]
+      ],
+      "features": "xₜ=[Cₜ/Cₜ₋₅−1, Cₜ/Cₜ₋₂₀−1, Cₜ/mean(Cₜ₋₁₉:ₜ)−1, max(sd(rₜ₋₁₉:ₜ),0.003), Vₜ/mean(Vₜ₋₂₀:ₜ₋₁), Cₜ/max(Cₜ₋₅₉:ₜ)−1, Bₜ]；rₜ=Cₜ/Cₜ₋₁−1。单位为小数收益、倍数、比例；量均值为0时当前适配器返回量比0。",
+      "fit": "标签 yⱼ=Oⱼ₊₆/Oⱼ₊₁−1，仅接纳 j+6<t 的成熟标签；有效观测步不保证连续交易日。训练窗口W∈{80,120}，至少40样本；训练集sd下限1e−5，距离d²=Σclip((xⱼ−xₜ)/sd,−5,5)²，取k∈{8,16,24}个最近邻。μ=mean(y)，u=sd(y)/sqrt(max(k/5,1))，D=max(0.02,−Q₀.₁(y))，edge=μ−0.002−λu，λ∈{0,0.5,1}。18组参数在过去40步每5步验证、至少4事件；目标mean(reward)−0.5sd(reward)，与持币比较。尚无独立最终测试集，不是完整策略回测。",
+      "gate": "Bₜ≥0.25。当前只使用近邻状态估计，不声称拟合了完整市场状态模型。",
+      "integration": "非防守模型：gate && edge>0 && validation_score>0 → buy_candidate，否则wait。模型内上限=min(0.20,0.80/N,0.005/D)×clip(edge/D,0,1)，账户参考上限=模型内上限×配置权重。跨模型目前分别输出，不净额下单，不自动重分配权重。5步期限、8%收盘风险复核及门槛失效只描述复核政策。执行前仍需账户现金、整手、T+1、涨跌停、流动性和总风险校验。",
+      "context": "配置→按cutoff读取PIT输入→日期/质量校验→构建池内情绪→逐股特征→成熟标签与历史验证→预测→模型门槛→研究候选/仓位上限→冻结报告。每层携带workspace_id、as_of、input_hash、模型/代码版本；后层不得重抓新行情混入旧上下文。报告含来源、原始输入、18组参数结果和相似日期。缺失返回blocked，不编造0分；回放只读，不写订单。",
+      "runtime_binding": {
+        "version": "pilot-gates-1",
+        "predictor": "shared_standardized_knn",
+        "gate_ast": {
+          "all": [
+            {
+              "gte": [
+                "breadth",
+                0.25
+              ]
+            }
+          ]
+        },
+        "on_gate_pass": "buy_candidate_only_if_edge_and_validation_positive",
+        "on_gate_fail": "wait"
+      }
+    },
+    "ak-regime-v1": {
+      "status": "已接入 · 日线试验适配 pilot-gates-1",
+      "inputs": [
+        [
+          "daily_bars",
+          "symbol,date,open,high,low,close,volume,source,fetched_at",
+          "已收盘日线；最多400根、至少180根；同一价格口径，剔除演示及无效OHLCV"
+        ],
+        [
+          "pool_breadth",
+          "date,up_count,total_count,scope",
+          "仅实例内≤8只股票，同日齐备；Bₜ=上涨数/N，平盘计入分母"
+        ],
+        [
+          "research_config",
+          "symbols,model_id,weight,cutoff",
+          "不可变配置；权重>0、总和≤1；北京时间15:10之前不使用当日日线"
+        ]
+      ],
+      "features": "xₜ=[Cₜ/Cₜ₋₅−1, Cₜ/Cₜ₋₂₀−1, Cₜ/mean(Cₜ₋₁₉:ₜ)−1, max(sd(rₜ₋₁₉:ₜ),0.003), Vₜ/mean(Vₜ₋₂₀:ₜ₋₁), Cₜ/max(Cₜ₋₅₉:ₜ)−1, Bₜ]；rₜ=Cₜ/Cₜ₋₁−1。单位为小数收益、倍数、比例；量均值为0时当前适配器返回量比0。",
+      "fit": "标签 yⱼ=Oⱼ₊₆/Oⱼ₊₁−1，仅接纳 j+6<t 的成熟标签；有效观测步不保证连续交易日。训练窗口W∈{80,120}，至少40样本；训练集sd下限1e−5，距离d²=Σclip((xⱼ−xₜ)/sd,−5,5)²，取k∈{8,16,24}个最近邻。μ=mean(y)，u=sd(y)/sqrt(max(k/5,1))，D=max(0.02,−Q₀.₁(y))，edge=μ−0.002−λu，λ∈{0,0.5,1}。18组参数在过去40步每5步验证、至少4事件；目标mean(reward)−0.5sd(reward)，与持币比较。尚无独立最终测试集，不是完整策略回测。",
+      "gate": "Bₜ≥0.50 且 MA20偏离>0。目标模型应在训练集拟合Gaussian HMM（2/3状态候选），前向过滤p(sₜ|x≤ₜ)，按状态条件收益配置；不得用全序列平滑概率回填历史决策。HMM当前未实现，不能把固定门槛称为状态学习。",
+      "integration": "非防守模型：gate && edge>0 && validation_score>0 → buy_candidate，否则wait。模型内上限=min(0.20,0.80/N,0.005/D)×clip(edge/D,0,1)，账户参考上限=模型内上限×配置权重。跨模型目前分别输出，不净额下单，不自动重分配权重。5步期限、8%收盘风险复核及门槛失效只描述复核政策。执行前仍需账户现金、整手、T+1、涨跌停、流动性和总风险校验。",
+      "context": "配置→按cutoff读取PIT输入→日期/质量校验→构建池内情绪→逐股特征→成熟标签与历史验证→预测→模型门槛→研究候选/仓位上限→冻结报告。每层携带workspace_id、as_of、input_hash、模型/代码版本；后层不得重抓新行情混入旧上下文。报告含来源、原始输入、18组参数结果和相似日期。缺失返回blocked，不编造0分；回放只读，不写订单。",
+      "runtime_binding": {
+        "version": "pilot-gates-1",
+        "predictor": "shared_standardized_knn",
+        "gate_ast": {
+          "all": [
+            {
+              "gte": [
+                "breadth",
+                0.5
+              ]
+            },
+            {
+              "gt": [
+                "ma20_distance",
+                0
+              ]
+            }
+          ]
+        },
+        "on_gate_pass": "buy_candidate_only_if_edge_and_validation_positive",
+        "on_gate_fail": "wait"
+      }
+    },
+    "ak-continuation-v1": {
+      "status": "已接入 · 日线试验适配 pilot-gates-1",
+      "inputs": [
+        [
+          "daily_bars",
+          "symbol,date,open,high,low,close,volume,source,fetched_at",
+          "已收盘日线；最多400根、至少180根；同一价格口径，剔除演示及无效OHLCV"
+        ],
+        [
+          "pool_breadth",
+          "date,up_count,total_count,scope",
+          "仅实例内≤8只股票，同日齐备；Bₜ=上涨数/N，平盘计入分母"
+        ],
+        [
+          "research_config",
+          "symbols,model_id,weight,cutoff",
+          "不可变配置；权重>0、总和≤1；北京时间15:10之前不使用当日日线"
+        ]
+      ],
+      "features": "xₜ=[Cₜ/Cₜ₋₅−1, Cₜ/Cₜ₋₂₀−1, Cₜ/mean(Cₜ₋₁₉:ₜ)−1, max(sd(rₜ₋₁₉:ₜ),0.003), Vₜ/mean(Vₜ₋₂₀:ₜ₋₁), Cₜ/max(Cₜ₋₅₉:ₜ)−1, Bₜ]；rₜ=Cₜ/Cₜ₋₁−1。单位为小数收益、倍数、比例；量均值为0时当前适配器返回量比0。",
+      "fit": "标签 yⱼ=Oⱼ₊₆/Oⱼ₊₁−1，仅接纳 j+6<t 的成熟标签；有效观测步不保证连续交易日。训练窗口W∈{80,120}，至少40样本；训练集sd下限1e−5，距离d²=Σclip((xⱼ−xₜ)/sd,−5,5)²，取k∈{8,16,24}个最近邻。μ=mean(y)，u=sd(y)/sqrt(max(k/5,1))，D=max(0.02,−Q₀.₁(y))，edge=μ−0.002−λu，λ∈{0,0.5,1}。18组参数在过去40步每5步验证、至少4事件；目标mean(reward)−0.5sd(reward)，与持币比较。尚无独立最终测试集，不是完整策略回测。",
+      "gate": "Cₜ>max(Hₜ₋₂₀:ₜ₋₁) 且相对成交量≥1.2 且 Bₜ≥0.50。突破区间不含当日；结合edge与验证目标才产生候选。",
+      "integration": "非防守模型：gate && edge>0 && validation_score>0 → buy_candidate，否则wait。模型内上限=min(0.20,0.80/N,0.005/D)×clip(edge/D,0,1)，账户参考上限=模型内上限×配置权重。跨模型目前分别输出，不净额下单，不自动重分配权重。5步期限、8%收盘风险复核及门槛失效只描述复核政策。执行前仍需账户现金、整手、T+1、涨跌停、流动性和总风险校验。",
+      "context": "配置→按cutoff读取PIT输入→日期/质量校验→构建池内情绪→逐股特征→成熟标签与历史验证→预测→模型门槛→研究候选/仓位上限→冻结报告。每层携带workspace_id、as_of、input_hash、模型/代码版本；后层不得重抓新行情混入旧上下文。报告含来源、原始输入、18组参数结果和相似日期。缺失返回blocked，不编造0分；回放只读，不写订单。",
+      "runtime_binding": {
+        "version": "pilot-gates-1",
+        "predictor": "shared_standardized_knn",
+        "gate_ast": {
+          "all": [
+            {
+              "gt": [
+                "close[t]",
+                {
+                  "max": "high[t-20:t-1]"
+                }
+              ]
+            },
+            {
+              "gte": [
+                "relative_volume",
+                1.2
+              ]
+            },
+            {
+              "gte": [
+                "breadth",
+                0.5
+              ]
+            }
+          ]
+        },
+        "on_gate_pass": "buy_candidate_only_if_edge_and_validation_positive",
+        "on_gate_fail": "wait"
+      }
+    },
+    "ak-repair-v1": {
+      "status": "已接入 · 日线试验适配 pilot-gates-1",
+      "inputs": [
+        [
+          "daily_bars",
+          "symbol,date,open,high,low,close,volume,source,fetched_at",
+          "已收盘日线；最多400根、至少180根；同一价格口径，剔除演示及无效OHLCV"
+        ],
+        [
+          "pool_breadth",
+          "date,up_count,total_count,scope",
+          "仅实例内≤8只股票，同日齐备；Bₜ=上涨数/N，平盘计入分母"
+        ],
+        [
+          "research_config",
+          "symbols,model_id,weight,cutoff",
+          "不可变配置；权重>0、总和≤1；北京时间15:10之前不使用当日日线"
+        ]
+      ],
+      "features": "xₜ=[Cₜ/Cₜ₋₅−1, Cₜ/Cₜ₋₂₀−1, Cₜ/mean(Cₜ₋₁₉:ₜ)−1, max(sd(rₜ₋₁₉:ₜ),0.003), Vₜ/mean(Vₜ₋₂₀:ₜ₋₁), Cₜ/max(Cₜ₋₅₉:ₜ)−1, Bₜ]；rₜ=Cₜ/Cₜ₋₁−1。单位为小数收益、倍数、比例；量均值为0时当前适配器返回量比0。",
+      "fit": "标签 yⱼ=Oⱼ₊₆/Oⱼ₊₁−1，仅接纳 j+6<t 的成熟标签；有效观测步不保证连续交易日。训练窗口W∈{80,120}，至少40样本；训练集sd下限1e−5，距离d²=Σclip((xⱼ−xₜ)/sd,−5,5)²，取k∈{8,16,24}个最近邻。μ=mean(y)，u=sd(y)/sqrt(max(k/5,1))，D=max(0.02,−Q₀.₁(y))，edge=μ−0.002−λu，λ∈{0,0.5,1}。18组参数在过去40步每5步验证、至少4事件；目标mean(reward)−0.5sd(reward)，与持币比较。尚无独立最终测试集，不是完整策略回测。",
+      "gate": "60步收盘回撤<−0.08，Bₜ>Bₜ₋₁，且 Cₜ>Cₜ₋₁。只表示恐慌后修复研究门槛，不证明反转成立。",
+      "integration": "非防守模型：gate && edge>0 && validation_score>0 → buy_candidate，否则wait。模型内上限=min(0.20,0.80/N,0.005/D)×clip(edge/D,0,1)，账户参考上限=模型内上限×配置权重。跨模型目前分别输出，不净额下单，不自动重分配权重。5步期限、8%收盘风险复核及门槛失效只描述复核政策。执行前仍需账户现金、整手、T+1、涨跌停、流动性和总风险校验。",
+      "context": "配置→按cutoff读取PIT输入→日期/质量校验→构建池内情绪→逐股特征→成熟标签与历史验证→预测→模型门槛→研究候选/仓位上限→冻结报告。每层携带workspace_id、as_of、input_hash、模型/代码版本；后层不得重抓新行情混入旧上下文。报告含来源、原始输入、18组参数结果和相似日期。缺失返回blocked，不编造0分；回放只读，不写订单。",
+      "runtime_binding": {
+        "version": "pilot-gates-1",
+        "predictor": "shared_standardized_knn",
+        "gate_ast": {
+          "all": [
+            {
+              "lt": [
+                "drawdown60",
+                -0.08
+              ]
+            },
+            {
+              "gt": [
+                "breadth[t]",
+                "breadth[t-1]"
+              ]
+            },
+            {
+              "gt": [
+                "close[t]",
+                "close[t-1]"
+              ]
+            }
+          ]
+        },
+        "on_gate_pass": "buy_candidate_only_if_edge_and_validation_positive",
+        "on_gate_fail": "wait"
+      }
+    },
+    "ak-cooling-v1": {
+      "status": "已接入 · 日线试验适配 pilot-gates-1",
+      "inputs": [
+        [
+          "daily_bars",
+          "symbol,date,open,high,low,close,volume,source,fetched_at",
+          "已收盘日线；最多400根、至少180根；同一价格口径，剔除演示及无效OHLCV"
+        ],
+        [
+          "pool_breadth",
+          "date,up_count,total_count,scope",
+          "仅实例内≤8只股票，同日齐备；Bₜ=上涨数/N，平盘计入分母"
+        ],
+        [
+          "research_config",
+          "symbols,model_id,weight,cutoff",
+          "不可变配置；权重>0、总和≤1；北京时间15:10之前不使用当日日线"
+        ]
+      ],
+      "features": "xₜ=[Cₜ/Cₜ₋₅−1, Cₜ/Cₜ₋₂₀−1, Cₜ/mean(Cₜ₋₁₉:ₜ)−1, max(sd(rₜ₋₁₉:ₜ),0.003), Vₜ/mean(Vₜ₋₂₀:ₜ₋₁), Cₜ/max(Cₜ₋₅₉:ₜ)−1, Bₜ]；rₜ=Cₜ/Cₜ₋₁−1。单位为小数收益、倍数、比例；量均值为0时当前适配器返回量比0。",
+      "fit": "标签 yⱼ=Oⱼ₊₆/Oⱼ₊₁−1，仅接纳 j+6<t 的成熟标签；有效观测步不保证连续交易日。训练窗口W∈{80,120}，至少40样本；训练集sd下限1e−5，距离d²=Σclip((xⱼ−xₜ)/sd,−5,5)²，取k∈{8,16,24}个最近邻。μ=mean(y)，u=sd(y)/sqrt(max(k/5,1))，D=max(0.02,−Q₀.₁(y))，edge=μ−0.002−λu，λ∈{0,0.5,1}。18组参数在过去40步每5步验证、至少4事件；目标mean(reward)−0.5sd(reward)，与持币比较。尚无独立最终测试集，不是完整策略回测。",
+      "gate": "Bₜ<Bₜ₋₁ 且MA20偏离>0.05 且相对成交量>1.5。gate为真输出reduce_review，否则wait；不产生新买入候选。",
+      "integration": "只返回已有持仓减仓复核提示，当前研究配置无持仓，仓位上限为0，不代表清仓指令。不创建卖单。未来需把实例position_snapshot引入，再按可卖数量及风控预算生成目标差额。",
+      "context": "配置→按cutoff读取PIT输入→日期/质量校验→构建池内情绪→逐股特征→成熟标签与历史验证→预测→模型门槛→研究候选/仓位上限→冻结报告。每层携带workspace_id、as_of、input_hash、模型/代码版本；后层不得重抓新行情混入旧上下文。报告含来源、原始输入、18组参数结果和相似日期。缺失返回blocked，不编造0分；回放只读，不写订单。",
+      "runtime_binding": {
+        "version": "pilot-gates-1",
+        "predictor": "shared_standardized_knn",
+        "gate_ast": {
+          "all": [
+            {
+              "lt": [
+                "breadth[t]",
+                "breadth[t-1]"
+              ]
+            },
+            {
+              "gt": [
+                "ma20_distance",
+                0.05
+              ]
+            },
+            {
+              "gt": [
+                "relative_volume",
+                1.5
+              ]
+            }
+          ]
+        },
+        "on_gate_pass": "reduce_review",
+        "on_gate_fail": "wait"
+      }
+    },
+    "ak-event-v1": {
+      "status": "设计契约 · 适配器未实现",
+      "inputs": [
+        [
+          "daily_bars",
+          "symbol,date,open,high,low,close,volume,source,fetched_at",
+          "已收盘日线；最多400根、至少180根；同一价格口径，剔除演示及无效OHLCV"
+        ],
+        [
+          "pool_breadth",
+          "date,up_count,total_count,scope",
+          "仅实例内≤8只股票，同日齐备；Bₜ=上涨数/N，平盘计入分母"
+        ],
+        [
+          "research_config",
+          "symbols,model_id,weight,cutoff",
+          "不可变配置；权重>0、总和≤1；北京时间15:10之前不使用当日日线"
+        ],
+        [
+          "event_pit",
+          "event_id,published_at,available_at,symbol,text_hash,type",
+          "实际公开时间≤cutoff；相同事件去重；需历史预期基线及公司行动"
+        ]
+      ],
+      "features": "计划：事件超预期 surprise=(actual−consensus)/历史预测误差sd；异常收益AR=r−β×基准收益，β只用事件前120日拟合；CAR(h)=ΣAR，h=1/3/5/10。文本输出方向、置信度和引用，不能替代预期基线。",
+      "fit": "计划：以事件为样本，按公开日期做扩展窗口训练；同事件簇不能跨训练/验证。岭回归预测后5日成本后收益；α由训练内时间切分选择。至少60个独立成熟事件，否则blocked；该最小样本数为待验证设计参数。",
+      "gate": "计划：超预期为正、预测成本后收益>0且风险通过才候选；负面事件仅进入风险复核。当前统一blocked。",
+      "integration": "缺事件时间、基准或历史一致预期时不退化成技术信号；计划输出event_id、surprise、CAR、prediction和expiry，送同一风险聚合层。",
+      "context": "配置→按cutoff读取PIT输入→日期/质量校验→构建池内情绪→逐股特征→成熟标签与历史验证→预测→模型门槛→研究候选/仓位上限→冻结报告。每层携带workspace_id、as_of、input_hash、模型/代码版本；后层不得重抓新行情混入旧上下文。报告含来源、原始输入、18组参数结果和相似日期。缺失返回blocked，不编造0分；回放只读，不写订单。",
+      "runtime_binding": {
+        "version": "design-1",
+        "status": "blocked",
+        "predictor": null,
+        "gate_ast": null,
+        "reason": "required_data_and_adapter_not_implemented"
+      }
+    },
+    "ak-quality-v1": {
+      "status": "设计契约 · 适配器未实现",
+      "inputs": [
+        [
+          "daily_bars",
+          "symbol,date,open,high,low,close,volume,source,fetched_at",
+          "已收盘日线；最多400根、至少180根；同一价格口径，剔除演示及无效OHLCV"
+        ],
+        [
+          "pool_breadth",
+          "date,up_count,total_count,scope",
+          "仅实例内≤8只股票，同日齐备；Bₜ=上涨数/N，平盘计入分母"
+        ],
+        [
+          "research_config",
+          "symbols,model_id,weight,cutoff",
+          "不可变配置；权重>0、总和≤1；北京时间15:10之前不使用当日日线"
+        ],
+        [
+          "financial_pit",
+          "report_period,published_at,revision_id,ROIC,CFO,profit,debt,industry",
+          "按实际公开时间连接行情；修订数据保留历史版本"
+        ],
+        [
+          "valuation_pit",
+          "date,market_cap,PE,PB,FCF_yield",
+          "亏损PE无效；行业适配，禁止跨行业机械排名"
+        ]
+      ],
+      "features": "计划：质量Q=0.45×经营质量+0.35×估值吸引力+0.20×财务安全；子项按行业历史参考分布转0–100分。ROIC、CFO/净利润、增长稳定性、杠杆及估值方向单独定义。缺项不重新归一伪造完整分；需要有版本的行业参考统计输入，不在实例内扫描全市场。",
+      "fit": "计划：质量和市场机会分开；以每个财报公开后的观测时点形成样本，60步超额收益标签，成熟后才能训练。初版固定权重作对照，再用非负岭回归验证候选权重，按财报时间分块切分。权重为研究假设，未训练。",
+      "gate": "计划：Q≥70、机会edge>0且财务硬风险未触发；70为待验证阈值。当前财报/估值适配不齐返回blocked。",
+      "integration": "输出质量、机会、风险三个独立字段及因子贡献，不用高质量抵消流动性或事件硬限制。质量不直接转换成下单概率。",
+      "context": "配置→按cutoff读取PIT输入→日期/质量校验→构建池内情绪→逐股特征→成熟标签与历史验证→预测→模型门槛→研究候选/仓位上限→冻结报告。每层携带workspace_id、as_of、input_hash、模型/代码版本；后层不得重抓新行情混入旧上下文。报告含来源、原始输入、18组参数结果和相似日期。缺失返回blocked，不编造0分；回放只读，不写订单。",
+      "runtime_binding": {
+        "version": "design-1",
+        "status": "blocked",
+        "predictor": null,
+        "gate_ast": null,
+        "reason": "required_data_and_adapter_not_implemented"
+      }
+    },
+    "ak-ensemble-v1": {
+      "status": "设计契约 · 适配器未实现",
+      "inputs": [
+        [
+          "daily_bars",
+          "symbol,date,open,high,low,close,volume,source,fetched_at",
+          "已收盘日线；最多400根、至少180根；同一价格口径，剔除演示及无效OHLCV"
+        ],
+        [
+          "pool_breadth",
+          "date,up_count,total_count,scope",
+          "仅实例内≤8只股票，同日齐备；Bₜ=上涨数/N，平盘计入分母"
+        ],
+        [
+          "research_config",
+          "symbols,model_id,weight,cutoff",
+          "不可变配置；权重>0、总和≤1；北京时间15:10之前不使用当日日线"
+        ],
+        [
+          "child_oos_predictions",
+          "model_version,symbol,decision_at,horizon,edge,realized_return,available_at",
+          "必须为历史样本外预测；同股票同预测期限对齐，禁止用训练内拟合值"
+        ],
+        [
+          "instance_risk",
+          "capital_weight,cash,positions,risk_budget",
+          "仅实例范围读取；研究和交易账本隔离"
+        ]
+      ],
+      "features": "计划：子模型成本后edge向量、预测相关矩阵、成熟误差、市场情绪状态。子模型缺失不能用0冒充中性。池内情绪与大盘情绪分别标记scope。",
+      "fit": "计划：在成熟样本上求 minₐ Σ(y−aᵀp)²+λ||a−a_prev||²，约束a≥0、Σa≤1，剩余现金。λ在训练内时间切分选择；至少60个对齐成熟样本。训练段估计误差协方差，额外验证成本和权重漂移。当前无优化器实现。",
+      "gate": "计划：组合edge>0、验证优于固定等权对照、相关性及风险预算通过；无足够OOS输入则blocked，不能直接平均前5个相关适配器当独立模型。",
+      "integration": "用户资金权重是硬上限；学习权重只在已分配预算内调整。先模型组合→按股票净额→组合风险→目标仓位→账户业务校验；发布新参数版本需要独立验证，不能改写历史结果。",
+      "context": "配置→按cutoff读取PIT输入→日期/质量校验→构建池内情绪→逐股特征→成熟标签与历史验证→预测→模型门槛→研究候选/仓位上限→冻结报告。每层携带workspace_id、as_of、input_hash、模型/代码版本；后层不得重抓新行情混入旧上下文。报告含来源、原始输入、18组参数结果和相似日期。缺失返回blocked，不编造0分；回放只读，不写订单。",
+      "runtime_binding": {
+        "version": "design-1",
+        "status": "blocked",
+        "predictor": null,
+        "gate_ast": null,
+        "reason": "required_data_and_adapter_not_implemented"
+      }
+    }
+  },
+  "engine_pipeline": {
+    "status": "specification_not_interpreted_by_runtime",
+    "implementation": "apps/api/src/trading_research.rs",
+    "context_keys": [
+      "workspace_id",
+      "as_of",
+      "input_hash",
+      "model_id",
+      "rules_version",
+      "code_hash"
+    ],
+    "input_contract": {
+      "max_symbols": 8,
+      "max_bars": 400,
+      "min_bars": 180,
+      "frequency": "1d",
+      "timezone": "Asia/Shanghai",
+      "close_cutoff": "15:10",
+      "max_age_calendar_days": 5,
+      "sentiment_scope": [
+        "pool",
+        "market"
+      ],
+      "market_adapter": "blocked"
+    },
+    "features": [
+      {
+        "id": "return_5",
+        "op": "pct_change",
+        "field": "close",
+        "lag": 5,
+        "unit": "ratio"
+      },
+      {
+        "id": "return_20",
+        "op": "pct_change",
+        "field": "close",
+        "lag": 20,
+        "unit": "ratio"
+      },
+      {
+        "id": "ma20_distance",
+        "op": "ratio_minus_one",
+        "numerator": "close[t]",
+        "denominator": {
+          "op": "mean",
+          "field": "close",
+          "window": 20,
+          "include_current": true
+        }
+      },
+      {
+        "id": "vol20",
+        "op": "stddev",
+        "input": "daily_return",
+        "window": 20,
+        "ddof": 0,
+        "floor": 0.003
+      },
+      {
+        "id": "relative_volume",
+        "op": "ratio",
+        "numerator": "volume[t]",
+        "denominator": {
+          "op": "mean",
+          "field": "volume",
+          "window": 20,
+          "include_current": false
+        },
+        "zero_denominator": 0
+      },
+      {
+        "id": "drawdown60",
+        "op": "ratio_minus_one",
+        "numerator": "close[t]",
+        "denominator": {
+          "op": "max",
+          "field": "close",
+          "window": 60,
+          "include_current": true
+        }
+      },
+      {
+        "id": "breadth",
+        "op": "advance_fraction",
+        "scope": "configured_pool",
+        "require_all_symbols_same_date": true,
+        "flat_in_denominator": true
+      }
+    ],
+    "label": {
+      "op": "forward_open_return",
+      "entry_offset": 1,
+      "exit_offset": 6,
+      "index_unit": "valid_observation",
+      "maturity": "exit_index < decision_index"
+    },
+    "estimator": {
+      "family": "standardized_knn",
+      "min_samples": 40,
+      "candidate_index_min": 60,
+      "window": [
+        80,
+        120
+      ],
+      "neighbors": [
+        8,
+        16,
+        24
+      ],
+      "caution": [
+        0,
+        0.5,
+        1
+      ],
+      "scale_floor": 1e-05,
+      "distance": "sum(clip((historical-current)/train_sd,-5,5)^2)",
+      "tie_break": "historical_index_ascending",
+      "expected_return": "mean(neighbor_labels)",
+      "uncertainty": "population_sd(neighbor_labels)/sqrt(max(k/5,1))",
+      "downside": "max(0.02,-sorted_labels[floor((k-1)*0.1)])",
+      "cost_roundtrip": 0.002,
+      "net_edge": "expected_return-cost_roundtrip-caution*uncertainty"
+    },
+    "validation": {
+      "lookback_steps": 40,
+      "stride": 5,
+      "min_events": 4,
+      "objective": "mean(reward)-0.5*population_sd(reward)",
+      "baseline": "cash",
+      "final_holdout": "not_implemented"
+    },
+    "allocation": {
+      "model_cap": 0.2,
+      "pool_invested_cap": 0.8,
+      "loss_budget": 0.005,
+      "formula": "min(model_cap,pool_invested_cap/N,loss_budget/downside)*clip(net_edge/downside,0,1)",
+      "account_ceiling": "model_ceiling*configured_model_weight",
+      "cross_model_netting": "not_implemented",
+      "execution": "research_only"
+    },
+    "stages": [
+      {
+        "id": "snapshot",
+        "reads": [
+          "config",
+          "cutoff",
+          "daily_bars"
+        ],
+        "writes": [
+          "frozen_input"
+        ],
+        "on_error": "blocked"
+      },
+      {
+        "id": "features",
+        "reads": [
+          "frozen_input"
+        ],
+        "writes": [
+          "feature_frame",
+          "pool_breadth"
+        ],
+        "on_error": "blocked"
+      },
+      {
+        "id": "fit_validate",
+        "reads": [
+          "feature_frame",
+          "mature_labels"
+        ],
+        "writes": [
+          "forecast",
+          "parameter_trials"
+        ],
+        "on_error": "blocked"
+      },
+      {
+        "id": "model_gate",
+        "reads": [
+          "forecast",
+          "feature_frame",
+          "model_rule"
+        ],
+        "writes": [
+          "research_decision"
+        ],
+        "on_error": "wait_or_blocked"
+      },
+      {
+        "id": "allocate",
+        "reads": [
+          "research_decision",
+          "configured_weight"
+        ],
+        "writes": [
+          "research_ceiling"
+        ],
+        "on_error": "blocked"
+      },
+      {
+        "id": "persist",
+        "reads": [
+          "frozen_input",
+          "research_decision",
+          "parameter_trials"
+        ],
+        "writes": [
+          "research_analysis"
+        ],
+        "forbidden_writes": [
+          "orders",
+          "positions",
+          "nav"
+        ]
+      }
+    ]
+  }
+}

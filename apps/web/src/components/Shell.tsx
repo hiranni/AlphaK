@@ -8,11 +8,11 @@ import { applyTheme, applyColorPreference, applyDensity } from "../theme";
 
 const nav = [
   { to: "/", label: "市场", icon: Activity, end: true },
-  { to: "/watchlist", label: "自选", icon: Star },
-  { to: "/data", label: "数据", icon: Database },
-  { to: "/settings", label: "设置", icon: Settings },
+  { to: "/watchlist", label: "样本", icon: Star },
   { to: "/quant", label: "量化", icon: FlaskConical },
   { to: "/trading", label: "实盘", icon: Wallet },
+  { to: "/data", label: "数据", icon: Database },
+  { to: "/settings", label: "设置", icon: Settings },
 ];
 
 export function Shell() {
@@ -87,7 +87,6 @@ export function Shell() {
             <kbd><Command size={11} aria-hidden="true" />K</kbd>
           </button>
           <div className="topbar-meta">
-            <span className="demo-chip">本机研究</span>
             <span className="topbar-date mono">{today}</span>
           </div>
         </header>

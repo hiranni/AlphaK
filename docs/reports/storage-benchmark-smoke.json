@@ -1,0 +1,201 @@
+{
+  "hardware": "Darwin Ryans-MacBookPro-M2.local 22.6.0 Darwin Kernel Version 22.6.0: Wed Jul  5 22:17:35 PDT 2023; root:xnu-8796.141.3~6/RELEASE_ARM64_T8112 arm64",
+  "limitations": [
+    "smoke runs below120/900 seconds are not D7 acceptance",
+    "process cumulative I/O and CPU/RSS require external profiler",
+    "lock samples cover chart entry; full lock histograms require instrumentation"
+  ],
+  "logical_cpus": 8,
+  "runs": [
+    {
+      "acceptance_eligible": false,
+      "after": {
+        "db_bytes": 4096,
+        "wal_bytes": 3460832
+      },
+      "before": {
+        "db_bytes": 4096,
+        "wal_bytes": 2105352
+      },
+      "commit": {
+        "count": 148,
+        "p50_us": 201,
+        "p95_us": 391,
+        "p99_us": 1179
+      },
+      "cycles": 4,
+      "db_busy": 0,
+      "latency_targets_met": true,
+      "lock_wait": {
+        "count": 4,
+        "p50_us": 2,
+        "p95_us": 2,
+        "p99_us": 2
+      },
+      "mode": "baseline",
+      "pragmas": {
+        "busy_timeout": 1000,
+        "foreign_keys": 1,
+        "freelist_count": 0,
+        "journal_mode": "wal",
+        "page_count": 392,
+        "page_size": 4096,
+        "synchronous": 2,
+        "wal_autocheckpoint": 1000
+      },
+      "read": {
+        "count": 2,
+        "p50_us": 12149,
+        "p95_us": 12149,
+        "p99_us": 12149
+      },
+      "sample_seconds": 12,
+      "sqlite_version": "3.46.0",
+      "symbols": 37,
+      "warmup_seconds": 0
+    },
+    {
+      "acceptance_eligible": false,
+      "after": {
+        "db_bytes": 4096,
+        "wal_bytes": 2381392
+      },
+      "before": {
+        "db_bytes": 4096,
+        "wal_bytes": 2105352
+      },
+      "commit": {
+        "count": 8,
+        "p50_us": 3666,
+        "p95_us": 8683,
+        "p99_us": 8683
+      },
+      "cycles": 4,
+      "db_busy": 0,
+      "latency_targets_met": true,
+      "lock_wait": {
+        "count": 4,
+        "p50_us": 1,
+        "p95_us": 1,
+        "p99_us": 1
+      },
+      "mode": "optimized",
+      "pragmas": {
+        "busy_timeout": 1000,
+        "foreign_keys": 1,
+        "freelist_count": 0,
+        "journal_mode": "wal",
+        "page_count": 411,
+        "page_size": 4096,
+        "synchronous": 2,
+        "wal_autocheckpoint": 1000
+      },
+      "read": {
+        "count": 2,
+        "p50_us": 677,
+        "p95_us": 677,
+        "p99_us": 677
+      },
+      "sample_seconds": 12,
+      "sqlite_version": "3.46.0",
+      "symbols": 37,
+      "warmup_seconds": 0
+    },
+    {
+      "acceptance_eligible": false,
+      "after": {
+        "db_bytes": 1617920,
+        "wal_bytes": 4124152
+      },
+      "before": {
+        "db_bytes": 4096,
+        "wal_bytes": 2105352
+      },
+      "commit": {
+        "count": 480,
+        "p50_us": 171,
+        "p95_us": 437,
+        "p99_us": 791
+      },
+      "cycles": 4,
+      "db_busy": 0,
+      "latency_targets_met": true,
+      "lock_wait": {
+        "count": 4,
+        "p50_us": 0,
+        "p95_us": 0,
+        "p99_us": 0
+      },
+      "mode": "baseline",
+      "pragmas": {
+        "busy_timeout": 1000,
+        "foreign_keys": 1,
+        "freelist_count": 1,
+        "journal_mode": "wal",
+        "page_count": 395,
+        "page_size": 4096,
+        "synchronous": 2,
+        "wal_autocheckpoint": 1000
+      },
+      "read": {
+        "count": 2,
+        "p50_us": 727,
+        "p95_us": 727,
+        "p99_us": 727
+      },
+      "sample_seconds": 12,
+      "sqlite_version": "3.46.0",
+      "symbols": 120,
+      "warmup_seconds": 0
+    },
+    {
+      "acceptance_eligible": false,
+      "after": {
+        "db_bytes": 4096,
+        "wal_bytes": 2587392
+      },
+      "before": {
+        "db_bytes": 4096,
+        "wal_bytes": 2105352
+      },
+      "commit": {
+        "count": 24,
+        "p50_us": 3043,
+        "p95_us": 7256,
+        "p99_us": 7482
+      },
+      "cycles": 4,
+      "db_busy": 0,
+      "latency_targets_met": true,
+      "lock_wait": {
+        "count": 4,
+        "p50_us": 0,
+        "p95_us": 0,
+        "p99_us": 0
+      },
+      "mode": "optimized",
+      "pragmas": {
+        "busy_timeout": 1000,
+        "foreign_keys": 1,
+        "freelist_count": 0,
+        "journal_mode": "wal",
+        "page_count": 416,
+        "page_size": 4096,
+        "synchronous": 2,
+        "wal_autocheckpoint": 1000
+      },
+      "read": {
+        "count": 2,
+        "p50_us": 396,
+        "p95_us": 396,
+        "p99_us": 396
+      },
+      "sample_seconds": 12,
+      "sqlite_version": "3.46.0",
+      "symbols": 120,
+      "warmup_seconds": 0
+    }
+  ],
+  "started_utc": "2026-10-25T12:48:39.887489+00:00",
+  "upstream": "offline deterministic fixture; no network latency included"
+}

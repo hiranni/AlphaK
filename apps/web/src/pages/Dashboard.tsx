@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowUpRight, Database, RotateCw } from "lucide-react";
 import { api } from "../api";
 import type { MarketOverview, NewsFeed, QualityReport, SourceStatus } from "../types";
+import { CompactStatus } from "../components/CompactStatus";
 import { Change } from "../components/Change";
 import { ErrorState, Loading } from "../components/States";
 import { dateLabel, money, num, pct } from "../format";
@@ -91,23 +92,11 @@ export function Dashboard() {
           <span className="market-meta mono">{overview.as_of || "等待首次同步"} · 每分钟更新 · {overview.source === "pending" ? "暂无真实行情" : overview.source}</span>
         </div>
         <aside className="head-aside">
+          <CompactStatus messages={[error ? `更新失败，保留上次行情：${error}` : "", !indices.length ? "指数行情待同步" : "", ...(sources?.freshness.filter(item => item.status !== "fresh").map(item => `${({index_quote:"指数",quote_daily:"个股",snapshot:"快照"} as Record<string,string>)[item.dataset] ?? item.dataset} ${item.last_success_at ? `截至 ${dateLabel(item.last_success_at)}` : "未同步"}`) ?? [])]} />
           {syncNotice && <span className="muted" role="status">{syncNotice}</span>}
           <button className="btn btn-soft" disabled={syncing} onClick={syncMarket}><RotateCw size={14} /> {syncing ? "提交中…" : "同步行情"}</button>
         </aside>
       </header>
-
-      {error ? <div className="data-warning" role="status">更新失败，保留上次行情：{error}</div> : null}
-
-      {!indices.length && <div className="data-warning" role="status">正在同步真实指数行情；上游不可用时保留最后成功数据。可在数据页查看同步结果。</div>}
-
-      {sources?.freshness.some((item) => item.status !== "fresh") ? (
-        <div className="data-warning" role="status">
-          <Database size={14} aria-hidden="true" />
-          <span>
-            部分行情待更新：{sources.freshness.filter((item) => item.status !== "fresh").map((item) => `${({ index_quote: "指数", quote_daily: "个股", snapshot: "快照" } as Record<string, string>)[item.dataset] ?? item.dataset} ${item.last_success_at ? `截至 ${dateLabel(item.last_success_at)}` : "未同步"}`).join(" · ")}
-          </span>
-        </div>
-      ) : null}
 
       <section className="ticker-row" aria-label="指数看板">
         {indices.map((index) => (
@@ -122,10 +111,10 @@ export function Dashboard() {
       </section>
 
       <div className="dash-grid">
-        <section className="panel breadth-panel breadth-comparison">
+        <section className="panel breadth-panel breadth-comparison breadth-open">
           <div className="panel-head">
             <h2>大盘与样本涨跌分布</h2>
-            <span className="panel-note">红涨 · 绿跌 · 灰平</span>
+            <button className="text-btn breadth-members-link" onClick={() => navigate("/market/breadth?members=1")}>样本成分</button><button className="breadth-card-link text-btn" onClick={() => navigate("/market/breadth")} aria-label="查看大盘与样本涨跌曲线对比">曲线对比 <ArrowUpRight size={14} /></button>
           </div>
           {[{ label: "大盘", data: market, count: marketTotal, time: market?.as_of, note: market ? `${market.source} · ${marketBreadth?.stale || breadthError ? "更新失败，保留上次统计" : "最新统计"}` : breadthError || marketBreadth?.error || "正在获取大盘统计…" },
             { label: "样本", data: total ? breadth : null, count: total, time: overview.as_of, note: "本地真实行情" }].map((row) => (

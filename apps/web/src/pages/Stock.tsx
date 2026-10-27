@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, ArrowUpRight, BookmarkPlus, ExternalLink, Layers, RotateCw } from "lucide-react";
 import { api } from "../api";
 import type { BarsResponse, Fundamentals, Profile, StockDetail, WatchlistGroup } from "../types";
+import { CompactStatus } from "../components/CompactStatus";
 import { Change } from "../components/Change";
 import { ErrorState, Loading } from "../components/States";
 import { KLineChart } from "../components/KLineChart";
@@ -25,7 +26,7 @@ export function Stock() {
   const [error, setError] = useState("");
   const [barError, setBarError] = useState("");
   const [tab, setTab] = useState<Tab>("overview");
-  const [period, setPeriod] = useState("daily");
+  const [period, setPeriod] = useState("3s");
   const [adjust, setAdjust] = useState("qfq");
   const [indicator, setIndicator] = useState<"macd" | "kdj" | "none">("macd");
   const [busy, setBusy] = useState(false);
@@ -87,14 +88,22 @@ export function Stock() {
   useEffect(() => {
     let active = true;
     let loading = false;
+    const clientId = crypto.randomUUID();
+    let sampling = false;
+    let leaseChecked = 0;
+    const dataset = period.endsWith("s") ? `second_${period.slice(0,-1)}` : period.endsWith("m") ? `minute_${period.slice(0,-1)}` : "realtime";
     const timer = window.setInterval(() => {
-      if (loading) return;
+      if (loading || document.hidden) return;
       loading = true;
-      Promise.all([api.stock(symbol), api.bars(symbol, period, adjust)])
-        .then(([nextStock, nextBars]) => { if (active) { setStock(nextStock); setBars(nextBars); } })
+      (async () => {
+        if (Date.now()-leaseChecked > 15000) { const lease = await api.subscription(clientId,[symbol],dataset); sampling=lease.sampling; leaseChecked=Date.now(); }
+        if (!sampling) return null;
+        return Promise.all([api.stock(symbol), api.bars(symbol, period, adjust)]);
+      })()
+        .then((result) => { if (active && result) { const [nextStock,nextBars]=result; setStock(nextStock); setBars(nextBars); } })
         .catch(() => { if (active) setNotice("行情更新失败，保留上次数据，稍后自动重试"); }).finally(() => { loading = false; });
-    }, 60000);
-    return () => { active = false; window.clearInterval(timer); };
+    }, period.endsWith("s") ? 3000 : 60000);
+    return () => { active = false; window.clearInterval(timer); void api.subscription(clientId,[],dataset).catch(() => {}); };
   }, [symbol, period, adjust]);
 
   useEffect(() => {
@@ -158,9 +167,9 @@ export function Stock() {
         </div>
         <div className="stock-actions">
           <button className="btn btn-solid" onClick={addToWatchlist} disabled={busy || !firstGroup}>
-            <BookmarkPlus size={15} /> {busy ? "加入中…" : "加入自选"}
+            <BookmarkPlus size={15} /> {busy ? "加入中…" : "加入样本"}
           </button>
-          <button className="btn btn-ghost" onClick={() => navigate("/watchlist")}><ArrowUpRight size={15} /> 查看自选</button>
+          <button className="btn btn-ghost" onClick={() => navigate("/watchlist")}><ArrowUpRight size={15} /> 查看样本</button>
           <button className="btn btn-ghost" disabled={busy} onClick={async () => { setBusy(true); try { await api.retrySupplements(symbol); setSupplementReload(value => value + 1); setBarReload(value => value + 1); setNotice("已重新请求补取"); } catch (err) { setNotice(err instanceof Error ? err.message : "请求失败"); } finally { setBusy(false); } }}><RotateCw size={14} /> 重新补取</button>
           {notice ? <span className="inline-notice" role="status">{notice}</span> : null}
         </div>
@@ -201,13 +210,13 @@ export function Stock() {
               </div>
               <div className="chart-controls">
                 <div className="segmented" role="group" aria-label="周期">
-                  {["1m", "5m", "15m", "30m", "60m", "daily", "weekly", "monthly"].map((value) => (
-                    <button key={value} className={period === value ? "is-active" : ""} onClick={() => setPeriod(value)}>{value.endsWith("m") ? `${value.slice(0, -1)}分` : value === "daily" ? "日" : value === "weekly" ? "周" : "月"}</button>
+                  {["3s", "5m", "30m", "daily", "monthly"].map((value) => (
+                    <button key={value} className={period === value ? "is-active" : ""} onClick={() => setPeriod(value)}>{value === "3s" ? "实时（3s）" : value.endsWith("m") ? `${value.slice(0, -1)}分` : value === "daily" ? "日K" : "月K"}</button>
                   ))}
                 </div>
                 <div className="segmented" role="group" aria-label="复权">
                   {["qfq", "none", "hfq"].map((value) => (
-                    <button key={value} disabled={period.endsWith("m")} className={adjust === value ? "is-active" : ""} onClick={() => setAdjust(value)}>{value === "qfq" ? "前复权" : value === "none" ? "不复权" : "后复权"}</button>
+                    <button key={value} disabled={period.endsWith("m") || period.endsWith("s")} className={adjust === value ? "is-active" : ""} onClick={() => setAdjust(value)}>{value === "qfq" ? "前复权" : value === "none" ? "不复权" : "后复权"}</button>
                   ))}
                 </div>
                 <div className="segmented" role="group" aria-label="指标">
@@ -218,13 +227,13 @@ export function Stock() {
               </div>
             </div>
             {barError ? <ErrorState message={barError} onRetry={() => setBarReload((value) => value + 1)} /> : null}
-            {bars?.notice ? <p className="inline-notice" role="status">{bars.notice}</p> : null}
+            {bars?.notice && (!period.endsWith("s") || bars.notice.includes("失败")) ? <div className="chart-status"><CompactStatus messages={[bars.notice]} /></div> : null}
             {bars ? <KLineChart bars={bars.bars} indicator={indicator} /> : !barError ? <Loading label="正在绘制 K 线" /> : null}
             <div className="chart-legend">
               <span className="mono"><i className="legend-dot ma5" /> MA5</span>
               <span className="mono"><i className="legend-dot ma20" /> MA20</span>
               <span className="mono"><i className="legend-dot ma60" /> MA60</span>
-              <span className="mono muted">{bars ? `${bars.adjust === "qfq" ? "前复权" : bars.adjust === "hfq" ? "后复权" : "不复权"} / ${period.endsWith("m") ? `${period.slice(0, -1)}分钟` : period === "daily" ? "日线" : period === "weekly" ? "周线" : "月线"}` : "—"}</span>
+              <span className="mono muted">{bars ? `${bars.adjust === "qfq" ? "前复权" : bars.adjust === "hfq" ? "后复权" : "不复权"} / ${period.endsWith("s") ? `${period.slice(0, -1)}秒` : period.endsWith("m") ? `${period.slice(0, -1)}分钟` : period === "daily" ? "日线" : period === "weekly" ? "周线" : "月线"}` : "—"}</span>
             </div>
           </section>
 

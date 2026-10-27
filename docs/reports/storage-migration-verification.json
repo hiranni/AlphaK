@@ -1,0 +1,346 @@
+{
+  "source": "online read-only copy",
+  "runs": 2,
+  "existing_data_checks": {
+    "instruments": {
+      "columns": [
+        "symbol",
+        "name",
+        "pinyin",
+        "exchange",
+        "board",
+        "industry",
+        "list_date",
+        "delist_date",
+        "status"
+      ],
+      "rows": 223,
+      "sha256": "ecda85666ed58d7927c83ab8b3e7387fad8bd9921824efae0aa37c7c54b92c58"
+    },
+    "trading_calendar": {
+      "columns": [
+        "trade_date",
+        "is_open"
+      ],
+      "rows": 260,
+      "sha256": "f9e9838ab093124d1ac22131d6a6425297e11c5a477eb37972a56da3498d6de1"
+    },
+    "quote_daily": {
+      "columns": [
+        "symbol",
+        "trade_date",
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "amount",
+        "adj_factor",
+        "turnover",
+        "source",
+        "batch_id",
+        "fetched_at",
+        "amount_known",
+        "adj_source",
+        "adj_batch_id"
+      ],
+      "rows": 13068,
+      "sha256": "04a42ece7afd4f63318c9e96ff5472fd1a54403ca7068658170e3d37dacbc79b"
+    },
+    "financial_report": {
+      "columns": [
+        "symbol",
+        "report_period",
+        "announce_date",
+        "statement_type",
+        "version",
+        "effective_at",
+        "supersedes",
+        "payload_hash",
+        "is_current",
+        "revenue",
+        "net_profit",
+        "total_assets",
+        "total_liabilities",
+        "equity",
+        "operating_cash_flow",
+        "collected_at"
+      ],
+      "rows": 66,
+      "sha256": "6a1ef9dbad4c9830c91495f9f4fa4156a28f3bfe203a053de6cbb8c8406e7c4a"
+    },
+    "financial_indicator": {
+      "columns": [
+        "symbol",
+        "report_period",
+        "roe",
+        "gross_margin",
+        "net_margin",
+        "debt_ratio",
+        "eps",
+        "bps"
+      ],
+      "rows": 65,
+      "sha256": "5b75386382c3c5299e4540e378b28ae0bf24f7b2bb0af0bdf63da040fef4a2ce"
+    },
+    "daily_basic": {
+      "columns": [
+        "symbol",
+        "trade_date",
+        "total_shares",
+        "float_shares",
+        "total_mv",
+        "float_mv",
+        "pe_ttm",
+        "pb",
+        "turnover"
+      ],
+      "rows": 3380,
+      "sha256": "34b96ddcb56d4eea0344b00c964f07f422d6ee405a7d1dbf9e128d244d5335fb"
+    },
+    "company_profile": {
+      "columns": [
+        "symbol",
+        "full_name",
+        "business",
+        "industry",
+        "list_date",
+        "controller",
+        "website",
+        "region",
+        "intro",
+        "source",
+        "updated_at"
+      ],
+      "rows": 13,
+      "sha256": "802452be8c2e2e4c508f572fd47aa741bac5d74c606c374e57b8b1dba95c8583"
+    },
+    "index_catalog": {
+      "columns": [
+        "code",
+        "name",
+        "market",
+        "category",
+        "status"
+      ],
+      "rows": 5,
+      "sha256": "b8614473ca0744c67a7a844f7740967836d80275df0bd5144e03a760e876dcc3"
+    },
+    "index_quote": {
+      "columns": [
+        "index_code",
+        "trade_date",
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "amount",
+        "source",
+        "batch_id",
+        "fetched_at",
+        "amount_known"
+      ],
+      "rows": 63,
+      "sha256": "cb72318aa5848d5746dd1bf728cd90032499c71482dec09f396c440e77e4f5e6"
+    },
+    "index_member": {
+      "columns": [
+        "index_code",
+        "symbol",
+        "in_date",
+        "out_date",
+        "weight"
+      ],
+      "rows": 37,
+      "sha256": "34221b512f09e8e7a38368b90163e67ca6fe4bfd7c4db4da48a5491fb3790388"
+    },
+    "sector_catalog": {
+      "columns": [
+        "id",
+        "name",
+        "sector_type",
+        "source",
+        "status"
+      ],
+      "rows": 9,
+      "sha256": "50c4230b085a39e07b42413d3d50e8334fcb58ee0f465a424f5a7e75888888d2"
+    },
+    "sector_member": {
+      "columns": [
+        "sector_id",
+        "symbol",
+        "in_date",
+        "out_date",
+        "weight"
+      ],
+      "rows": 13,
+      "sha256": "357cb9342ab7bd6b64f93a1bdf39853f7b8d7a5ef125a0cc786c1006b8927e15"
+    },
+    "watchlist_group": {
+      "columns": [
+        "id",
+        "name",
+        "sort",
+        "color"
+      ],
+      "rows": 6,
+      "sha256": "f892fe83a5e77db97940b3f62dbeaef604a79820cffd4e056a3ddc97a60792d8"
+    },
+    "watchlist_item": {
+      "columns": [
+        "id",
+        "group_id",
+        "symbol",
+        "note",
+        "sort",
+        "created_at"
+      ],
+      "rows": 82,
+      "sha256": "4f7b4be1571421832d534ada576887ca66accd3172d438628729012b671d8cc8"
+    },
+    "quote_snapshot": {
+      "columns": [
+        "symbol",
+        "name",
+        "trade_date",
+        "open",
+        "high",
+        "low",
+        "close",
+        "prev_close",
+        "volume",
+        "amount",
+        "change_pct",
+        "source",
+        "batch_id",
+        "fetched_at"
+      ],
+      "rows": 126,
+      "sha256": "0bc8b4f3c7ad4910d61cd720f93391cbfe00fa21ec87a7be9ff89f9b9ea0ae93"
+    },
+    "backfill_audit": {
+      "columns": [
+        "id",
+        "dataset",
+        "start_date",
+        "end_date",
+        "changed",
+        "operator",
+        "created_at"
+      ],
+      "rows": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "reference_correction": {
+      "columns": [
+        "id",
+        "dataset",
+        "record_key",
+        "field",
+        "old_value",
+        "new_value",
+        "operator",
+        "corrected_at"
+      ],
+      "rows": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "watch_alert": {
+      "columns": [
+        "id",
+        "symbol",
+        "kind",
+        "threshold",
+        "cooldown_minutes",
+        "enabled",
+        "last_triggered_at",
+        "last_observation",
+        "created_at"
+      ],
+      "rows": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "watch_alert_event": {
+      "columns": [
+        "id",
+        "rule_id",
+        "symbol",
+        "message",
+        "as_of",
+        "created_at"
+      ],
+      "rows": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    }
+  },
+  "data_preserved": true,
+  "integrity": "ok",
+  "foreign_keys": "ok",
+  "diagnostics": {
+    "db_bytes": 11030528,
+    "metrics": {
+      "busy": 0,
+      "changed_quotes": 0,
+      "lock_wait_us": 0,
+      "realtime_commits": 0,
+      "write_us": 0
+    },
+    "path": "/private/var/folders/w9/4jlzdq8d0rdcbbbnvygn80x40000gn/T/alphak-migration-5pihelhq/copy.db",
+    "pragmas": {
+      "busy_timeout": 1000,
+      "foreign_keys": 1,
+      "freelist_count": 0,
+      "journal_mode": "wal",
+      "page_count": 2693,
+      "page_size": 4096,
+      "synchronous": 2,
+      "wal_autocheckpoint": 1000
+    },
+    "rows": {
+      "app_setting": 7,
+      "backfill_audit": 0,
+      "bar_cache": 0,
+      "cache_tombstone": 0,
+      "cleanup_audit": 0,
+      "cleanup_plan": 0,
+      "company_profile": 13,
+      "daily_basic": 3380,
+      "data_freshness": 3,
+      "data_job": 12,
+      "data_reference": 0,
+      "data_source_config": 2,
+      "financial_indicator": 65,
+      "financial_report": 66,
+      "index_catalog": 5,
+      "index_member": 37,
+      "index_quote": 63,
+      "input_manifest": 0,
+      "instruments": 223,
+      "job_idempotency": 0,
+      "lifecycle_policy": 50,
+      "live_cache": 288,
+      "market_breadth_observation": 0,
+      "market_snapshot": 3,
+      "quality_report": 7,
+      "quote_daily": 13068,
+      "quote_snapshot": 126,
+      "quote_staging": 0,
+      "reference_correction": 0,
+      "sector_catalog": 9,
+      "sector_member": 13,
+      "source_retry_task": 3,
+      "subscription_lease": 0,
+      "sync_checkpoint": 0,
+      "trading_calendar": 260,
+      "watch_alert": 0,
+      "watch_alert_event": 0,
+      "watchlist_group": 6,
+      "watchlist_item": 82
+    },
+    "shm_bytes": 32768,
+    "sqlite_version": "3.46.0",
+    "wal_alert": false,
+    "wal_bytes": 24752
+  }
+}

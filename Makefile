@@ -26,14 +26,14 @@ clean:
 	@echo '已保留：dist/alphak/alphak.db*、dist/alphak/backups/、backups/、data/、.env。'
 	@echo '如 make web 仍在运行，请重启前端开发服务。清理后执行 make build 重新构建。'
 
-build: package
+build: harness package
 
 package: build-api build-web
 	mkdir -p dist/alphak/bin dist/alphak/web dist/alphak/scripts
 	cp apps/api/target/release/alphak-api dist/alphak/bin/alphak-api
 	rm -rf dist/alphak/web
 	cp -R apps/web/dist dist/alphak/web
-	cp scripts/start.sh scripts/stop.sh scripts/backup.sh dist/alphak/scripts/
+	cp scripts/start.sh scripts/stop.sh scripts/backup.sh scripts/restore.sh scripts/storage-backup.py dist/alphak/scripts/
 	cp .env.example dist/alphak/.env.example
 	@echo '打包完成：dist/alphak；运行 scripts/start.sh 启动'
 
@@ -51,3 +51,11 @@ api:
 
 web:
 	$(NPM) --prefix apps/web run dev -- --strictPort
+
+.PHONY: harness persistence-doc-update
+harness:
+	python3 scripts/persistence-harness.py --self-test
+	python3 scripts/test-storage-backup.py
+
+persistence-doc-update:
+	python3 scripts/persistence-harness.py --update-schema

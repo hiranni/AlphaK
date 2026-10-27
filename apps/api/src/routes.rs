@@ -10,6 +10,7 @@ use chrono::{Datelike, NaiveDate};
 use rusqlite::{params, Connection, OptionalExtension};
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
+use serde_json::json;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
 
@@ -126,6 +127,38 @@ pub fn build_app(state: AppState) -> Router {
         .allow_headers(Any);
 
     Router::new()
+        .route(
+            "/api/v1/trading/paper-strategies/{id}/execution",
+            get(crate::execution::list).post(crate::execution::execute),
+        )
+        .route(
+            "/api/v1/trading/paper-strategies/{id}",
+            axum::routing::patch(crate::paper_strategy::update),
+        )
+        .route(
+            "/api/v1/trading/paper-strategies/{id}/events",
+            get(crate::paper_strategy::events),
+        )
+        .route(
+            "/api/v1/trading/paper-strategies",
+            get(crate::paper_strategy::list).post(crate::paper_strategy::create),
+        )
+        .route(
+            "/api/v1/trading/research",
+            get(crate::trading_research::list).post(crate::trading_research::create),
+        )
+        .route(
+            "/api/v1/trading/research/{id}/analyze",
+            post(crate::trading_research::run),
+        )
+        .route("/api/v1/quant/strategies", get(crate::quant::list))
+        .route("/api/v1/quant/seed", post(crate::quant::seed))
+        .route("/api/v1/quant/strategies/{id}", put(crate::quant::toggle))
+        .route("/api/v1/quant/run", post(crate::quant::run))
+        .route(
+            "/api/v1/quant/observations",
+            get(crate::quant::observations),
+        )
         .route("/api/v1/health", get(health))
         .route("/api/v1/market/overview", get(overview))
         .route("/api/v1/market/breadth", get(crate::market_breadth::get))
@@ -142,6 +175,8 @@ pub fn build_app(state: AppState) -> Router {
         )
         .route("/api/v1/instruments/{symbol}/daily-basic", get(daily_basic))
         .route("/api/v1/indices/{code}", get(index_detail))
+        .route("/api/v1/indices/{code}/bars", get(index_bars))
+        .route("/api/v1/market/breadth/history", get(breadth_history))
         .route("/api/v1/market/popularity", get(popularity))
         .route("/api/v1/market/news", get(market_news))
         .route(
@@ -169,6 +204,7 @@ pub fn build_app(state: AppState) -> Router {
             put(crate::workbench::update_alert).delete(crate::workbench::delete_alert),
         )
         .route("/api/v1/watchlists", get(watchlists).post(create_group))
+        .route("/api/v1/realtime/quotes", get(realtime_quotes))
         .route("/api/v1/watchlists/refresh", post(refresh_watchlists))
         .route("/api/v1/watchlists/groups", post(create_group))
         .route(
@@ -193,6 +229,26 @@ pub fn build_app(state: AppState) -> Router {
         .route("/api/v1/admin/backfill", post(run_backfill))
         .route("/api/v1/admin/data-sources", get(data_sources))
         .route("/api/v1/admin/quality", get(quality))
+        .route(
+            "/api/v1/data/subscriptions",
+            post(crate::persistence::lease),
+        )
+        .route(
+            "/api/v1/data/checkpoint",
+            post(crate::persistence::checkpoint),
+        )
+        .route("/api/v1/data/inputs", post(crate::persistence::freeze))
+        .route(
+            "/api/v1/data/inputs/{hash}",
+            get(crate::persistence::frozen),
+        )
+        .route("/api/v1/data/retention", get(crate::persistence::retention))
+        .route(
+            "/api/v1/data/cleanup/preview",
+            post(crate::persistence::preview),
+        )
+        .route("/api/v1/data/cleanup", post(crate::persistence::cleanup))
+        .route("/api/v1/data/cleanup/{id}", get(crate::persistence::result))
         .route("/api/v1/openapi.json", get(openapi))
         .fallback(fallback)
         .layer(TraceLayer::new_for_http().make_span_with(
@@ -221,10 +277,23 @@ pub(crate) async fn fallback() -> impl IntoResponse {
 }
 
 fn db(state: &AppState) -> Result<std::sync::MutexGuard<'_, Connection>, AppError> {
-    state
-        .db
-        .lock()
-        .map_err(|_| AppError::internal("database lock poisoned"))
+    let start = std::time::Instant::now();
+    loop {
+        match state.db.try_lock() {
+            Ok(conn) => return Ok(conn),
+            Err(std::sync::TryLockError::Poisoned(_)) => {
+                return Err(AppError::internal("database lock poisoned"))
+            }
+            Err(_) if start.elapsed() >= std::time::Duration::from_secs(1) => {
+                return Err(AppError::new(
+                    StatusCode::SERVICE_UNAVAILABLE,
+                    "DB_BUSY",
+                    "数据库繁忙，请稍后重试",
+                ))
+            }
+            Err(_) => std::thread::sleep(std::time::Duration::from_millis(2)),
+        }
+    }
 }
 
 fn latest_date(conn: &Connection, symbol: Option<&str>) -> Result<Option<String>, AppError> {
@@ -717,6 +786,16 @@ async fn bars(
             .map(envelope)
             .map_err(|error| AppError::new(StatusCode::BAD_GATEWAY, "MINUTE_UNAVAILABLE", error));
     }
+    if matches!(period.as_str(), "1s" | "3s" | "5s" | "15s" | "30s" | "60s") {
+        let name = {
+            let conn = db(&state)?;
+            get_instrument(&conn, &symbol)?.name
+        };
+        return crate::live::seconds(&state, &symbol, &name, &period)
+            .await
+            .map(envelope)
+            .map_err(|error| AppError::new(StatusCode::BAD_GATEWAY, "SECOND_UNAVAILABLE", error));
+    }
     let conn = db(&state)?;
     let instrument = get_instrument(&conn, &symbol)?;
     let adjust = q.adjust.unwrap_or_else(|| "qfq".into());
@@ -1087,6 +1166,99 @@ async fn daily_basic(
     })
 }
 
+async fn index_bars(
+    State(state): State<AppState>,
+    ApiPath(code): ApiPath<String>,
+    Query(query): Query<BarsQuery>,
+) -> Result<Json<ApiResponse<BarsResponse>>, AppError> {
+    let period = query.period.unwrap_or_else(|| "daily".into());
+    if !matches!(period.as_str(), "daily" | "monthly") {
+        return Err(AppError::bad_request("指数目前支持日K、月K"));
+    }
+    let symbol = code.clone();
+    let (name, rows) = crate::persistence::run_db(state, move |conn| {
+        let name: String = conn.query_row("SELECT name FROM index_catalog WHERE code=?1", [&code], |r| r.get(0))
+            .optional()?.ok_or_else(|| AppError::not_found("指数不存在"))?;
+        let mut stmt = conn.prepare("SELECT trade_date,open,high,low,close,volume,amount FROM (SELECT * FROM index_quote WHERE index_code=?1 AND source<>'demo' AND strftime('%w',trade_date) NOT IN ('0','6') AND NOT EXISTS(SELECT 1 FROM trading_calendar c WHERE c.trade_date=index_quote.trade_date AND c.is_open=0) ORDER BY trade_date DESC LIMIT 1500) ORDER BY trade_date")?;
+        let rows = stmt.query_map([&code], |r| Ok((r.get(0)?,r.get(1)?,r.get(2)?,r.get(3)?,r.get(4)?,r.get(5)?,r.get(6)?)))?.collect::<rusqlite::Result<Vec<_>>>()?;
+        Ok((name, rows))
+    }).await?;
+    let mut bars = aggregate_bars(rows, &period);
+    indicators::apply(&mut bars);
+    Ok(envelope(BarsResponse {
+        symbol,
+        name,
+        period,
+        adjust: "none".into(),
+        adjust_available: false,
+        notice: None,
+        as_of: bars.last().map(|b| b.date.clone()).unwrap_or_default(),
+        bars,
+    }))
+}
+
+#[derive(Debug, Default, Deserialize)]
+struct BreadthQuery {
+    period: Option<String>,
+}
+
+async fn breadth_history(
+    State(state): State<AppState>,
+    ApiQuery(query): ApiQuery<BreadthQuery>,
+) -> Result<Json<ApiResponse<serde_json::Value>>, AppError> {
+    let period = query.period.unwrap_or_else(|| "daily".into());
+    if !["30min", "1h", "daily", "weekly", "monthly"].contains(&period.as_str()) {
+        return Err(AppError::bad_request("不支持的涨跌分布周期"));
+    }
+    #[cfg(not(test))]
+    crate::market_breadth::refresh_history(state.clone(), &period);
+    crate::persistence::run_db(state, move |conn| {
+        // Same-date previous close only: do not compare a suspended stock to an arbitrary old session.
+        let mut stmt = conn.prepare("WITH dates AS (SELECT DISTINCT trade_date FROM quote_daily WHERE source<>'demo' AND strftime('%w',trade_date) NOT IN ('0','6') AND NOT EXISTS(SELECT 1 FROM trading_calendar c WHERE c.trade_date=quote_daily.trade_date AND c.is_open=0) ORDER BY trade_date DESC LIMIT 121), sessions AS (SELECT trade_date,LAG(trade_date) OVER(ORDER BY trade_date) AS previous FROM dates) SELECT q.trade_date,SUM(q.close>p.close),SUM(q.close<p.close),SUM(q.close=p.close) FROM sessions s JOIN quote_daily q ON q.trade_date=s.trade_date JOIN instruments i ON i.symbol=q.symbol JOIN quote_daily p ON p.symbol=q.symbol AND p.trade_date=s.previous WHERE q.source<>'demo' AND p.source<>'demo' AND p.close>0 AND q.volume>0 AND NOT EXISTS(SELECT 1 FROM trading_calendar c WHERE c.is_open=1 AND c.trade_date>s.previous AND c.trade_date<s.trade_date) GROUP BY q.trade_date ORDER BY q.trade_date")?;
+        let sample = stmt.query_map([], |r| Ok(json!({"date":r.get::<_,String>(0)?,"advance":r.get::<_,i64>(1)?,"decline":r.get::<_,i64>(2)?,"flat":r.get::<_,i64>(3)?})))?.collect::<rusqlite::Result<Vec<_>>>()?;
+        // Intraday observations use provider time, never collection time or synthetic daily interpolation.
+        let intraday = period == "30min" || period == "1h";
+        let step = if period == "30min" { 1800 } else { 3600 };
+        let sample = if intraday {
+            let mut stmt = conn.prepare("WITH ranked AS (SELECT b.symbol,(b.bucket_start/?1)*?1 AS bucket,CAST(json_extract(b.payload,'$.close') AS REAL) AS close,ROW_NUMBER() OVER(PARTITION BY b.symbol,b.bucket_start/?1 ORDER BY b.bucket_start DESC,b.observed_at DESC) AS rank, date(b.bucket_start,'unixepoch','+8 hours') AS day FROM bar_cache b JOIN instruments i ON i.symbol=b.symbol WHERE (b.period LIKE 'minute_%' OR b.period LIKE 'second_%') AND b.source<>'demo' AND b.bucket_start>strftime('%s','now','-30 days')), prices AS (SELECT r.*, (SELECT q.close FROM quote_daily q WHERE q.symbol=r.symbol AND q.trade_date<r.day AND q.source<>'demo' ORDER BY q.trade_date DESC LIMIT 1) AS previous FROM ranked r WHERE rank=1) SELECT bucket,SUM(close>previous),SUM(close<previous),SUM(close=previous),COUNT(*) FROM prices WHERE previous>0 GROUP BY bucket ORDER BY bucket DESC LIMIT 480")?;
+            let mut points = stmt.query_map([step], |r| Ok(json!({"date":r.get::<_,i64>(0)?.to_string(),"advance":r.get::<_,i64>(1)?,"decline":r.get::<_,i64>(2)?,"flat":r.get::<_,i64>(3)?,"coverage":r.get::<_,i64>(4)?})))?.collect::<rusqlite::Result<Vec<_>>>()?;
+            points.reverse(); points
+        } else { sample };
+        let mut stmt = conn.prepare("SELECT trade_date,payload,phase,provider_time FROM market_breadth_observation ORDER BY trade_date,provider_time,id")?;
+        let rows = stmt.query_map([],|r| Ok((r.get::<_,String>(0)?,r.get::<_,String>(1)?,r.get::<_,String>(2)?,r.get::<_,Option<String>>(3)?)))?.collect::<rusqlite::Result<Vec<_>>>()?;
+        let mut market_by_time = std::collections::BTreeMap::new();
+        for (date,payload,phase,provider_time) in rows {
+            let Ok(mut value) = serde_json::from_str::<serde_json::Value>(&payload) else { continue };
+            let tdx = value["source"].as_str().unwrap_or("").starts_with("AxData · 通达信");
+            if tdx && value["source"].as_str()!=Some(format!("AxData · 通达信 · {}",if intraday {if step==1800 {"30m"}else{"60m"}}else{"day"}).as_str()) {continue}
+            let key = if intraday {
+                let Some(time) = provider_time.and_then(|v| chrono::NaiveDateTime::parse_from_str(&v,"%Y-%m-%d %H:%M:%S").ok()) else { continue };
+                let timestamp = time.and_utc().timestamp()-8*3600;
+                ((timestamp/step)*step).to_string()
+            } else { date };
+            value["date"]=json!(key); value["phase"]=json!(phase);
+            if !tdx && market_by_time.get(&key).is_some_and(|p:&serde_json::Value|p["source"].as_str().unwrap_or("").starts_with("AxData · 通达信")) {continue}
+            market_by_time.insert(key,value);
+        }
+        let market: Vec<_> = market_by_time.into_values().collect();
+        let aggregate = |points: Vec<serde_json::Value>| {
+            let mut buckets = std::collections::BTreeMap::new();
+            for mut point in points {
+                let Some(date) = point["date"].as_str().and_then(|v| NaiveDate::parse_from_str(v,"%Y-%m-%d").ok()) else { continue };
+                let bucket = if period == "weekly" { date-chrono::Duration::days(date.weekday().num_days_from_monday().into()) } else { date.with_day(1).unwrap() };
+                point["observed_date"] = point["date"].clone();
+                point["date"] = json!(bucket.to_string());
+                buckets.insert(bucket,point);
+            }
+            buckets.into_values().collect::<Vec<_>>()
+        };
+        let (sample,market) = if period == "weekly" || period == "monthly" { (aggregate(sample),aggregate(market)) } else { (sample,market) };
+        let mut stmt = conn.prepare("WITH dates AS (SELECT DISTINCT trade_date FROM quote_daily WHERE source<>'demo' AND strftime('%w',trade_date) NOT IN ('0','6') AND NOT EXISTS(SELECT 1 FROM trading_calendar c WHERE c.trade_date=quote_daily.trade_date AND c.is_open=0) ORDER BY trade_date DESC LIMIT 2) SELECT i.symbol,i.name,i.industry FROM instruments i JOIN quote_daily q ON q.symbol=i.symbol JOIN quote_daily p ON p.symbol=i.symbol AND p.trade_date=(SELECT MIN(trade_date) FROM dates) WHERE q.trade_date=(SELECT MAX(trade_date) FROM dates) AND p.trade_date<q.trade_date AND q.source<>'demo' AND p.source<>'demo' AND p.close>0 AND q.volume>0 AND NOT EXISTS(SELECT 1 FROM trading_calendar c WHERE c.is_open=1 AND c.trade_date>p.trade_date AND c.trade_date<q.trade_date) ORDER BY i.symbol")?;
+        let members = stmt.query_map([],|r| Ok(json!({"symbol":r.get::<_,String>(0)?,"name":r.get::<_,String>(1)?,"industry":r.get::<_,String>(2)?})))?.collect::<rusqlite::Result<Vec<_>>>()?;
+        Ok(envelope(json!({"sample":sample,"market":market,"members":members,"period":period})))
+    }).await
+}
+
 async fn index_detail(
     State(state): State<AppState>,
     ApiPath(code): ApiPath<String>,
@@ -1100,8 +1272,8 @@ async fn index_detail(
         )
         .optional()?
         .ok_or_else(|| AppError::not_found("指数不存在"))?;
-    let (date, close, amount, amount_known): (String, f64, f64, i64) = conn.query_row("SELECT trade_date, close, amount, amount_known FROM index_quote WHERE index_code = ?1 ORDER BY trade_date DESC LIMIT 1", params![code], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?)))?;
-    let prev: Option<f64> = conn.query_row("SELECT close FROM index_quote WHERE index_code = ?1 AND trade_date < ?2 ORDER BY trade_date DESC LIMIT 1", params![code, date], |r| r.get(0)).optional()?;
+    let (date, close, amount, amount_known): (String, f64, f64, i64) = conn.query_row("SELECT trade_date, close, amount, amount_known FROM index_quote WHERE index_code = ?1 AND strftime('%w',trade_date) NOT IN ('0','6') AND NOT EXISTS(SELECT 1 FROM trading_calendar c WHERE c.trade_date=index_quote.trade_date AND c.is_open=0) ORDER BY trade_date DESC LIMIT 1", params![code], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?)))?;
+    let prev: Option<f64> = conn.query_row("SELECT close FROM index_quote WHERE index_code = ?1 AND trade_date < ?2 AND strftime('%w',trade_date) NOT IN ('0','6') AND NOT EXISTS(SELECT 1 FROM trading_calendar c WHERE c.trade_date=index_quote.trade_date AND c.is_open=0) ORDER BY trade_date DESC LIMIT 1", params![code, date], |r| r.get(0)).optional()?;
     let members = index_member_rows(&conn, &code, &date)?;
     Ok(envelope(IndexDetail {
         change_points: prev.map(|previous| close - previous),
@@ -1464,6 +1636,79 @@ async fn create_group(
     Ok(envelope(watchlist_groups(&conn)?))
 }
 
+#[derive(Debug, serde::Deserialize)]
+struct RealtimeQuery {
+    symbols: Option<String>,
+}
+
+async fn realtime_quotes(
+    State(state): State<AppState>,
+    ApiQuery(query): ApiQuery<RealtimeQuery>,
+) -> Result<Json<ApiResponse<Vec<serde_json::Value>>>, AppError> {
+    if !crate::sources::axdata::enabled() {
+        return Err(AppError::new(
+            StatusCode::SERVICE_UNAVAILABLE,
+            "AXDATA_UNAVAILABLE",
+            "AxData 未配置",
+        ));
+    }
+    let mut symbols: Vec<String> = query
+        .symbols
+        .unwrap_or_default()
+        .split(',')
+        .map(|symbol| symbol.trim().to_uppercase())
+        .filter(|symbol| !symbol.is_empty())
+        .collect();
+    symbols.sort();
+    symbols.dedup();
+    if symbols.is_empty() {
+        return Ok(envelope(vec![]));
+    }
+    if symbols.len() > 20 {
+        return Err(AppError::bad_request("实时行情单次最多 20 只"));
+    }
+    let snapshots = crate::sources::axdata::snapshots(&state.sources.client, &symbols)
+        .await
+        .map_err(|error| {
+            AppError::new(StatusCode::BAD_GATEWAY, "AXDATA_QUOTE_UNAVAILABLE", error)
+        })?;
+    if snapshots.len() != symbols.len() || snapshots.iter().any(|s| !symbols.contains(&s.symbol)) {
+        return Err(AppError::invalid_data("上游报价未完整覆盖请求标的"));
+    }
+    let checked_at = now_iso();
+    let out = snapshots
+        .iter()
+        .map(|s| {
+            serde_json::json!({
+                "symbol": s.symbol, "close": s.close, "pre_close": s.prev_close,
+                "change_pct": s.change_pct, "volume": s.volume, "amount": s.amount,
+                "updated_at": null, "provider_time": null, "time_status": "unknown",
+                "last_checked_at": checked_at, "source": "axdata",
+            })
+        })
+        .collect::<Vec<_>>();
+    let prepared = crate::persistence::prepare_realtime(&snapshots)?;
+    crate::persistence::run_db(state, move |conn| {
+        crate::persistence::publish_prepared(conn, prepared, &checked_at)
+    })
+    .await?;
+    let mut out = out;
+    out.sort_by(|left, right| {
+        left["symbol"]
+            .as_str()
+            .unwrap_or("")
+            .cmp(right["symbol"].as_str().unwrap_or(""))
+    });
+    if out.is_empty() {
+        return Err(AppError::new(
+            StatusCode::BAD_GATEWAY,
+            "AXDATA_QUOTE_UNAVAILABLE",
+            "AxData 秒级行情暂不可用",
+        ));
+    }
+    Ok(envelope(out))
+}
+
 async fn refresh_watchlists(
     State(state): State<AppState>,
 ) -> Result<Json<ApiResponse<Vec<WatchlistGroup>>>, AppError> {
@@ -1479,7 +1724,9 @@ async fn rename_group(
     ApiJson(body): ApiJson<RenameGroupBody>,
 ) -> Result<Json<ApiResponse<Vec<WatchlistGroup>>>, AppError> {
     if id == crate::db::WATCHLIST_ALL {
-        return Err(AppError::bad_request("全部自选是固定入口，不能重命名或修改颜色"));
+        return Err(AppError::bad_request(
+            "全部自选是固定入口，不能重命名或修改颜色",
+        ));
     }
     if body.name.is_none() && body.color.is_none() {
         return Err(AppError::bad_request("至少提供名称或颜色"));
@@ -1561,7 +1808,10 @@ async fn clear_group(
     if id == crate::db::WATCHLIST_ALL {
         conn.execute("DELETE FROM watchlist_item", [])?;
     } else {
-        conn.execute("DELETE FROM watchlist_item WHERE group_id = ?1", params![id])?;
+        conn.execute(
+            "DELETE FROM watchlist_item WHERE group_id = ?1",
+            params![id],
+        )?;
     }
     Ok(envelope(watchlist_groups(&conn)?))
 }
@@ -1573,8 +1823,14 @@ async fn add_item(
     let conn = db(&state)?;
     get_instrument(&conn, &body.symbol)?;
     let tx = conn.unchecked_transaction()?;
-    let group_exists: bool = tx.query_row("SELECT EXISTS(SELECT 1 FROM watchlist_group WHERE id=?1)", [&body.group_id], |r| r.get(0))?;
-    if !group_exists { return Err(AppError::not_found("分组不存在")); }
+    let group_exists: bool = tx.query_row(
+        "SELECT EXISTS(SELECT 1 FROM watchlist_group WHERE id=?1)",
+        [&body.group_id],
+        |r| r.get(0),
+    )?;
+    if !group_exists {
+        return Err(AppError::not_found("分组不存在"));
+    }
     let note = body.note.unwrap_or_default();
     // Join the collection first. Assigning to a group never replaces its note.
     for group_id in [crate::db::WATCHLIST_ALL, body.group_id.as_str()] {
@@ -1612,8 +1868,14 @@ async fn delete_item(
 ) -> Result<Json<ApiResponse<Vec<WatchlistGroup>>>, AppError> {
     let conn = db(&state)?;
     let tx = conn.unchecked_transaction()?;
-    let item: Option<(String,String)> = tx.query_row("SELECT group_id,symbol FROM watchlist_item WHERE id=?1", [&id], |r| Ok((r.get(0)?,r.get(1)?))).optional()?;
-    if let Some((group_id,symbol)) = item {
+    let item: Option<(String, String)> = tx
+        .query_row(
+            "SELECT group_id,symbol FROM watchlist_item WHERE id=?1",
+            [&id],
+            |r| Ok((r.get(0)?, r.get(1)?)),
+        )
+        .optional()?;
+    if let Some((group_id, symbol)) = item {
         if group_id == crate::db::WATCHLIST_ALL {
             tx.execute("DELETE FROM watchlist_item WHERE symbol=?1", [symbol])?;
         } else {
@@ -2111,6 +2373,159 @@ mod tests {
     use tower::ServiceExt;
 
     #[tokio::test]
+    async fn index_chart_uses_real_ohlcv_and_aggregates_months() {
+        let state = crate::db::test_state();
+        {
+            let conn = state.db.lock().unwrap();
+            conn.execute("DELETE FROM index_quote WHERE index_code='000001.SH'", [])
+                .unwrap();
+            for (date, source, close) in [
+                ("2026-10-21", "demo", 9.0),
+                ("2026-10-22", "fixture", 11.0),
+                ("2026-10-23", "fixture", 12.0),
+                ("2026-10-25", "fixture", 99.0),
+            ] {
+                conn.execute("INSERT INTO index_quote(index_code,trade_date,open,high,low,close,volume,amount,source) VALUES('000001.SH',?1,10,100,9,?2,100,1000,?3)",params![date,close,source]).unwrap();
+            }
+        }
+        let result = index_bars(
+            State(state.clone()),
+            ApiPath("000001.SH".into()),
+            Query(BarsQuery {
+                period: Some("daily".into()),
+                adjust: None,
+            }),
+        )
+        .await
+        .unwrap()
+        .0
+        .data
+        .unwrap();
+        assert_eq!(result.symbol, "000001.SH");
+        assert_eq!(result.bars.len(), 2);
+        assert_eq!(result.bars[1].date, "2026-10-23");
+        let result = index_bars(
+            State(state.clone()),
+            ApiPath("000001.SH".into()),
+            Query(BarsQuery {
+                period: Some("monthly".into()),
+                adjust: None,
+            }),
+        )
+        .await
+        .unwrap()
+        .0
+        .data
+        .unwrap();
+        assert_eq!(result.bars.len(), 1);
+        assert_eq!(result.bars[0].volume, 200.0);
+        assert_eq!(result.bars[0].close, 12.0);
+        assert!(index_bars(
+            State(state),
+            ApiPath("000001.SH".into()),
+            Query(BarsQuery {
+                period: Some("3s".into()),
+                adjust: None
+            })
+        )
+        .await
+        .is_err());
+    }
+
+    #[tokio::test]
+    async fn breadth_comparison_uses_real_previous_session_and_latest_observation() {
+        let state = crate::db::test_state();
+        {
+            let conn = state.db.lock().unwrap();
+            for (date, close) in [
+                ("2026-10-22", 10.0),
+                ("2026-10-23", 11.0),
+                ("2026-10-25", 12.0),
+            ] {
+                conn.execute("INSERT OR REPLACE INTO quote_daily(symbol,trade_date,open,high,low,close,volume,amount,source) VALUES('600519.SH',?1,10,12,9,?2,100,1000,'fixture')",params![date,close]).unwrap();
+            }
+            for (time, advance) in [("2026-10-23 10:00:00", 10), ("2026-10-23 15:00:00", 20)] {
+                let payload =
+                    serde_json::json!({"advance":advance,"decline":5,"flat":1}).to_string();
+                conn.execute("INSERT INTO market_breadth_observation(trade_date,source,scope,provider_time,observed_at,available_at,phase,payload,observation_hash) VALUES('2026-10-23','fixture','market',?1,1,1,'close',?2,?1)",params![time,payload]).unwrap();
+            }
+        }
+        let value = breadth_history(State(state), ApiQuery(BreadthQuery::default()))
+            .await
+            .unwrap()
+            .0
+            .data
+            .unwrap();
+        let sample = value["sample"].as_array().unwrap();
+        assert_eq!(sample.len(), 1);
+        assert_eq!(sample[0]["date"], "2026-10-23");
+        assert_eq!(sample[0]["advance"], 1);
+        assert_eq!(value["market"].as_array().unwrap().len(), 1);
+        assert_eq!(value["market"][0]["advance"], 20);
+    }
+
+    #[tokio::test]
+    async fn breadth_periods_preserve_observation_time_and_last_value() {
+        let state = crate::db::test_state();
+        {
+            let conn = state.db.lock().unwrap();
+            for (time, advance) in [
+                ("2026-10-22 10:00:00", 10),
+                ("2026-10-23 10:05:00", 20),
+                ("2026-10-23 10:25:00", 30),
+                ("2026-10-23 10:35:00", 40),
+            ] {
+                let payload = json!({"advance":advance,"decline":5,"flat":1}).to_string();
+                conn.execute("INSERT INTO market_breadth_observation(trade_date,source,scope,provider_time,observed_at,available_at,phase,payload,observation_hash) VALUES(?1,'fixture','market',?2,1,1,'intraday',?3,?2)",params![&time[..10],time,payload]).unwrap();
+            }
+        }
+        for (period, length) in [
+            ("30min", 3),
+            ("1h", 2),
+            ("daily", 2),
+            ("weekly", 1),
+            ("monthly", 1),
+        ] {
+            let result = breadth_history(
+                State(state.clone()),
+                ApiQuery(BreadthQuery {
+                    period: Some(period.into()),
+                }),
+            )
+            .await
+            .unwrap()
+            .0
+            .data
+            .unwrap();
+            let market = result["market"].as_array().unwrap();
+            assert_eq!(market.len(), length, "{period}");
+            assert_eq!(
+                market.last().unwrap()["advance"],
+                40,
+                "last observation, never sum"
+            );
+            if period == "30min" {
+                assert_eq!(market[1]["advance"], 30);
+            }
+            if period == "weekly" {
+                assert_eq!(market[0]["observed_date"], "2026-10-23");
+            }
+            assert!(
+                result["sample"].as_array().unwrap().is_empty(),
+                "missing samples must not be fabricated"
+            );
+        }
+        assert!(breadth_history(
+            State(state),
+            ApiQuery(BreadthQuery {
+                period: Some("3s".into())
+            })
+        )
+        .await
+        .is_err());
+    }
+
+    #[tokio::test]
     async fn last_custom_group_can_be_deleted_but_collection_is_retained() {
         let state = crate::db::test_state();
         {
@@ -2134,11 +2549,20 @@ mod tests {
                 )
                 .unwrap();
             assert_eq!(orphaned, 0);
-            conn.execute("DELETE FROM watchlist_group WHERE id NOT IN ('grp-test','watchlist-all')", [])
-                .unwrap();
+            conn.execute(
+                "DELETE FROM watchlist_group WHERE id NOT IN ('grp-test','watchlist-all')",
+                [],
+            )
+            .unwrap();
         }
-        delete_group(State(state.clone()), ApiPath("grp-test".into())).await.unwrap();
-        assert!(delete_group(State(state), ApiPath(crate::db::WATCHLIST_ALL.into())).await.is_err());
+        delete_group(State(state.clone()), ApiPath("grp-test".into()))
+            .await
+            .unwrap();
+        assert!(
+            delete_group(State(state), ApiPath(crate::db::WATCHLIST_ALL.into()))
+                .await
+                .is_err()
+        );
     }
 
     #[tokio::test]
@@ -2365,7 +2789,12 @@ mod tests {
             .await
             .unwrap();
         let groups: serde_json::Value = serde_json::from_slice(&body).unwrap();
-        let default = groups["data"].as_array().unwrap().iter().find(|g| g["id"] != crate::db::WATCHLIST_ALL).unwrap();
+        let default = groups["data"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|g| g["id"] != crate::db::WATCHLIST_ALL)
+            .unwrap();
         let id = default["id"].as_str().unwrap();
         let ids: Vec<String> = default["items"]
             .as_array()
@@ -2393,7 +2822,14 @@ mod tests {
             .await
             .unwrap();
         let after: serde_json::Value = serde_json::from_slice(&body).unwrap();
-        let first = after["data"].as_array().unwrap().iter().find(|g| g["id"] == id).unwrap()["items"][0]["id"].as_str().unwrap();
+        let first = after["data"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|g| g["id"] == id)
+            .unwrap()["items"][0]["id"]
+            .as_str()
+            .unwrap();
         assert_eq!(first, reversed[0]);
 
         let res = app
@@ -2440,7 +2876,15 @@ mod tests {
             .await
             .unwrap();
         let groups: serde_json::Value = serde_json::from_slice(&body).unwrap();
-        let id = groups["data"].as_array().unwrap().iter().find(|g| g["id"] != crate::db::WATCHLIST_ALL).unwrap()["id"].as_str().unwrap().to_string();
+        let id = groups["data"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|g| g["id"] != crate::db::WATCHLIST_ALL)
+            .unwrap()["id"]
+            .as_str()
+            .unwrap()
+            .to_string();
         let res = app
             .clone()
             .oneshot(
@@ -2494,46 +2938,152 @@ mod tests {
 
     #[tokio::test]
     async fn watchlist_collection_survives_without_custom_groups() {
-        async fn call(app: &Router, method: &str, uri: &str, body: serde_json::Value, status: StatusCode) -> serde_json::Value {
-            let response = app.clone().oneshot(Request::builder().method(method).uri(uri)
-                .header("content-type", "application/json")
-                .body(Body::from(body.to_string())).unwrap()).await.unwrap();
+        async fn call(
+            app: &Router,
+            method: &str,
+            uri: &str,
+            body: serde_json::Value,
+            status: StatusCode,
+        ) -> serde_json::Value {
+            let response = app
+                .clone()
+                .oneshot(
+                    Request::builder()
+                        .method(method)
+                        .uri(uri)
+                        .header("content-type", "application/json")
+                        .body(Body::from(body.to_string()))
+                        .unwrap(),
+                )
+                .await
+                .unwrap();
             assert_eq!(response.status(), status, "{method} {uri}");
-            let bytes = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
+            let bytes = axum::body::to_bytes(response.into_body(), usize::MAX)
+                .await
+                .unwrap();
             serde_json::from_slice(&bytes).unwrap()
         }
         let state = crate::db::test_state();
         let app = build_app(state.clone());
-        let before = watchlist_groups(&state.db.lock().unwrap()).unwrap()[0].items.len();
+        let before = watchlist_groups(&state.db.lock().unwrap()).unwrap()[0]
+            .items
+            .len();
         for id in ["grp-default", "grp-banks"] {
-            call(&app,"DELETE", &format!("/api/v1/watchlists/groups/{id}"), serde_json::Value::Null, StatusCode::OK).await;
+            call(
+                &app,
+                "DELETE",
+                &format!("/api/v1/watchlists/groups/{id}"),
+                serde_json::Value::Null,
+                StatusCode::OK,
+            )
+            .await;
         }
-        let data = call(&app,"GET","/api/v1/watchlists",serde_json::Value::Null,StatusCode::OK).await;
-        assert_eq!(data["data"].as_array().unwrap().len(),1);
-        assert_eq!(data["data"][0]["id"],crate::db::WATCHLIST_ALL);
-        assert_eq!(data["data"][0]["items"].as_array().unwrap().len(),before);
-        for (method,body) in [("DELETE",serde_json::Value::Null),("PUT",serde_json::json!({"name":"rename"}))] {
-            call(&app,method,"/api/v1/watchlists/groups/watchlist-all",body,StatusCode::BAD_REQUEST).await;
+        let data = call(
+            &app,
+            "GET",
+            "/api/v1/watchlists",
+            serde_json::Value::Null,
+            StatusCode::OK,
+        )
+        .await;
+        assert_eq!(data["data"].as_array().unwrap().len(), 1);
+        assert_eq!(data["data"][0]["id"], crate::db::WATCHLIST_ALL);
+        assert_eq!(data["data"][0]["items"].as_array().unwrap().len(), before);
+        for (method, body) in [
+            ("DELETE", serde_json::Value::Null),
+            ("PUT", serde_json::json!({"name":"rename"})),
+        ] {
+            call(
+                &app,
+                method,
+                "/api/v1/watchlists/groups/watchlist-all",
+                body,
+                StatusCode::BAD_REQUEST,
+            )
+            .await;
         }
-        call(&app,"DELETE","/api/v1/watchlists/groups/watchlist-all/items",serde_json::Value::Null,StatusCode::OK).await;
+        call(
+            &app,
+            "DELETE",
+            "/api/v1/watchlists/groups/watchlist-all/items",
+            serde_json::Value::Null,
+            StatusCode::OK,
+        )
+        .await;
         let added=call(&app,"POST","/api/v1/watchlists/items",serde_json::json!({"group_id":"watchlist-all","symbol":"600519.SH","note":"collection note"}),StatusCode::OK).await;
-        let item_id=added["data"][0]["items"][0]["id"].as_str().unwrap().to_string();
-        let created=call(&app,"POST","/api/v1/watchlists/groups",serde_json::json!({"name":"test"}),StatusCode::OK).await;
-        let group_id=created["data"][1]["id"].as_str().unwrap().to_string();
+        let item_id = added["data"][0]["items"][0]["id"]
+            .as_str()
+            .unwrap()
+            .to_string();
+        let created = call(
+            &app,
+            "POST",
+            "/api/v1/watchlists/groups",
+            serde_json::json!({"name":"test"}),
+            StatusCode::OK,
+        )
+        .await;
+        let group_id = created["data"][1]["id"].as_str().unwrap().to_string();
         for _ in 0..2 {
-            let result=call(&app,"POST","/api/v1/watchlists/items",serde_json::json!({"group_id":group_id,"symbol":"600519.SH","note":"group note"}),StatusCode::OK).await;
-            assert_eq!(result["data"][0]["items"].as_array().unwrap().len(),1);
-            assert_eq!(result["data"][0]["items"][0]["note"],"collection note");
-            assert_eq!(result["data"][1]["items"].as_array().unwrap().len(),1);
+            let result = call(
+                &app,
+                "POST",
+                "/api/v1/watchlists/items",
+                serde_json::json!({"group_id":group_id,"symbol":"600519.SH","note":"group note"}),
+                StatusCode::OK,
+            )
+            .await;
+            assert_eq!(result["data"][0]["items"].as_array().unwrap().len(), 1);
+            assert_eq!(result["data"][0]["items"][0]["note"], "collection note");
+            assert_eq!(result["data"][1]["items"].as_array().unwrap().len(), 1);
         }
-        call(&app,"DELETE",&format!("/api/v1/watchlists/groups/{group_id}/items"),serde_json::Value::Null,StatusCode::OK).await;
-        assert_eq!(watchlist_groups(&state.db.lock().unwrap()).unwrap()[0].items.len(),1);
-        call(&app,"POST","/api/v1/watchlists/items",serde_json::json!({"group_id":group_id,"symbol":"600519.SH"}),StatusCode::OK).await;
-        let removed=call(&app,"DELETE",&format!("/api/v1/watchlists/items/{item_id}"),serde_json::Value::Null,StatusCode::OK).await;
-        assert!(removed["data"].as_array().unwrap().iter().all(|g|g["items"].as_array().unwrap().is_empty()));
+        call(
+            &app,
+            "DELETE",
+            &format!("/api/v1/watchlists/groups/{group_id}/items"),
+            serde_json::Value::Null,
+            StatusCode::OK,
+        )
+        .await;
+        assert_eq!(
+            watchlist_groups(&state.db.lock().unwrap()).unwrap()[0]
+                .items
+                .len(),
+            1
+        );
+        call(
+            &app,
+            "POST",
+            "/api/v1/watchlists/items",
+            serde_json::json!({"group_id":group_id,"symbol":"600519.SH"}),
+            StatusCode::OK,
+        )
+        .await;
+        let removed = call(
+            &app,
+            "DELETE",
+            &format!("/api/v1/watchlists/items/{item_id}"),
+            serde_json::Value::Null,
+            StatusCode::OK,
+        )
+        .await;
+        assert!(removed["data"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|g| g["items"].as_array().unwrap().is_empty()));
         // An invalid group must not leave a partially added collection entry.
-        call(&app,"POST","/api/v1/watchlists/items",serde_json::json!({"group_id":"missing","symbol":"600519.SH"}),StatusCode::NOT_FOUND).await;
-        assert!(watchlist_groups(&state.db.lock().unwrap()).unwrap()[0].items.is_empty());
+        call(
+            &app,
+            "POST",
+            "/api/v1/watchlists/items",
+            serde_json::json!({"group_id":"missing","symbol":"600519.SH"}),
+            StatusCode::NOT_FOUND,
+        )
+        .await;
+        assert!(watchlist_groups(&state.db.lock().unwrap()).unwrap()[0]
+            .items
+            .is_empty());
     }
 
     #[tokio::test]

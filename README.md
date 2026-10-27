@@ -1,8 +1,8 @@
 # AlphaK · A 股研究工作台（MVP）
 
-本地优先、纯 Web 的 A 股研究工作台。市场页仅展示真实行情，后台更新已导入和自选证券及指数；接入腾讯、东方财富和新浪公开源，不接实盘、不做全市场扫描。
+本地优先、纯 Web 的 A 股研究工作台。市场页仅展示真实行情，后台更新已导入和自选证券及指数；默认优先通过 AxData HTTP API 取数，腾讯/东方财富/新浪作为直接源兜底；不接实盘、不做全市场扫描。
 
-市场页的涨跌分布仅统计本地真实样本，不代表全市场。后台行情快照每 60 秒更新（最多 8 个并发），历史日线每 15 分钟补齐。个股支持 1/5/15/30/60 分钟 K 线及日、周、月线；分钟线、估值每 60 秒更新，公司资料及财报缓存 24 小时。无真实行情时显示待同步，未接入的真实板块数据留空。
+市场页分别展示大盘涨跌分布与本地真实样本分布；大盘接口不可用时明确标记，不用样本冒充大盘。自选表格在交易采样窗口内每 3 秒刷新报价，每请求最多 20 只、按批串行；页面隐藏时暂停，使用 30 秒订阅租约。个股图表入口为实时（3 秒）、5 分、30 分、日 K、月 K。后台快照更新与历史补齐独立运行。无真实行情时显示待同步，上游未提供可信报价时间时显示行情时间未知，检查时间独立展示。
 
 旧任务／回填入口中的 mock adapter 默认禁用，防止后台任务把演示数据重新写入；尚未接入真实源的数据集会明确报错。离线演示环境可显式设置 `ALPHAK_ALLOW_DEMO_SYNC=1`，日常研究不应开启。
 
@@ -13,7 +13,7 @@
 | 后端 | Rust · Axum · rusqlite（SQLite） |
 | 前端 | Vite · React 19 · TypeScript · 手写 Hallmark design tokens |
 | 图表 | TradingView Lightweight Charts |
-| 数据 | SQLite 本地文件；公开源实时缓存（腾讯/东财/新浪），演示种子仅用于首次引导 |
+| 数据 | SQLite 本地文件；AxData HTTP API + 腾讯/东财/新浪直连兜底，演示种子仅用于首次引导 |
 
 > 架构口径：MVP 固定为 Rust/Axum + SQLite + Vite/React，**直接本机运行，不依赖 Docker**；数据库只用 SQLite，不引入 PostgreSQL/TimescaleDB/Redis。
 >
@@ -22,6 +22,34 @@
 ## 构建、启动与停止
 
 构建环境需要 Rust/Cargo、Node.js 20.19+（或 22.12+）、npm 和 Make。脚本适用于 macOS/Linux。以下命令从项目根目录执行。
+
+### 0. AxData（可选但推荐）
+
+AlphaK 默认尝试 `http://127.0.0.1:8666` 的 AxData HTTP API；未启动时自动回退到腾讯/东财/新浪直连。
+
+AxData 独立运行在 `/Users/ryan/Desktop/Project/AxData`，使用项目内 `.venv`：
+
+```bash
+cd /Users/ryan/Desktop/Project/AxData
+./axdata.sh start
+./axdata.sh status
+./axdata.sh stop
+./axdata.sh restart
+./axdata.sh logs
+```
+
+确认：
+
+```bash
+curl http://127.0.0.1:8666/health
+```
+
+AlphaK 的 `.env` 配置：
+
+```bash
+AXDATA_API_BASE=http://127.0.0.1:8666
+# AXDATA_API_TOKEN=  # 远程 AxData 才需要
+```
 
 ### 1. 打包完整应用
 
@@ -155,7 +183,8 @@ CI 配置见 `.github/workflows/ci.yml`。E2E 需要本地 API 与 Vite 已启�
 
 ## 数据与边界
 
-- 首次初始化仍有演示种子；市场页只读非 demo 行情，并通过后台缓存补全已导入/自选证券和指数。
+- 首次初始化仍有演示种子；市场页只读非 demo 行情，并通过 AxData/直连源后台缓存补全已导入/自选证券和指数。
+- AxData 不可用时自动回退到腾讯/东财/新浪；AxData 服务本身使用独立 Parquet/DuckDB，AlphaK 业务库仍只有 SQLite。
 - 行情与估值/财务可能来自不同来源，页面按字段显示来源；未补齐字段留空，不用演示值填充。
 - 全部来源失败时保留最后成功数据并标记过期，不自动回退 mock。
 - 不提供全市场条件筛选、策略池、回测、虚拟盘、Agent 或回放入口；这些属于 V1。
@@ -194,3 +223,13 @@ CI 配置见 `.github/workflows/ci.yml`。E2E 需要本地 API 与 Vite 已启�
 ### A 股自选工作台
 
 启动后访问 `/watchlist`，可查看市场概览、自选筛选排序、日频技术信号、快捷分析和持久化提醒。数据口径、评分定义与通知限制见 [自选工作台说明](docs/watchlist-workbench.md)。
+
+### 高频行情
+
+- 自选页：可见行每 3 秒批量请求 AxData 快照，更新最新价、涨跌幅和迷你实时走势。
+- 个股页：周期切换支持 `5秒 / 15秒 / 30秒 / 60秒`，数据来自 AxData `stock_kline_second_tdx`，每 5 秒刷新。
+- 不使用 WebSocket；AlphaK 全部通过 HTTP 轮询，失败时保留上一次数据。
+
+### 持久化文档检查
+
+执行 `make harness` 检查真实迁移结构、政策注册与设计文档一致性。任何持久化表、字段、索引、约束或保留政策变更，必须同时更新 [数据持久化设计](openspec/changes/data-retention-and-sqlite-performance/design.md) 中的用途、期限和清理规则，再运行 `make persistence-doc-update` 更新结构表并审阅差异。构建和CI自动执行检查；探测仅使用内存数据库。

@@ -1,0 +1,20 @@
+{
+  "audited_at": "2026-10-26",
+  "status": "source_review_not_empirical_validation",
+  "files": {
+    "apps/api/src/trading_research.rs": "403dc6de4e23ad1479379187816eb0f88260e8a72bca0df2f5a89af0fab83b02",
+    "apps/api/src/adaptive.rs": "bab81b6e5ff05301d0b0087d859588c65244dd296974444a6bfe01febfcac8a0",
+    "apps/web/src/data/quantDefinitions.ts": "13217cb21cdfdef851c4c259c7a034f919559d684671c5623db462361b3167de",
+    "docs/specs/research/model-calculation-contracts.json": "900ef49f08dffef1d6293ea0a9c2f6341ce9fc4425806e17d352ebfa725464f7"
+  },
+  "models": [
+    "ak-state-v1",
+    "ak-regime-v1",
+    "ak-continuation-v1",
+    "ak-repair-v1",
+    "ak-cooling-v1",
+    "ak-event-v1",
+    "ak-quality-v1",
+    "ak-ensemble-v1"
+  ]
+}

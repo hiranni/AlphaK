@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowDown, ArrowUp, ArrowUpDown, ArrowUpRight, Activity, BellPlus, LayoutGrid, TrendingUp, Zap, Download, GripVertical, Palette, Pencil, Plus, RefreshCw, Star, Trash2, Upload, X } from "lucide-react";
 import { api } from "../api";
-import type { SearchResult, Settings, WatchAnalysis, WatchlistGroup, WatchWorkbench } from "../types";
+import type { RealtimeQuote, SearchResult, Settings, WatchAnalysis, WatchlistGroup, WatchWorkbench } from "../types";
 import { Change } from "../components/Change";
 import { Empty, ErrorState, Loading } from "../components/States";
 import { dateLabel, num, compact, changeClass } from "../format";
@@ -76,6 +76,8 @@ export function Watchlist() {
   const [importErrors, setImportErrors] = useState<string[]>([]);
   const [scrollTop, setScrollTop] = useState(0);
   const [workbench, setWorkbench] = useState<WatchWorkbench | null>(null);
+  const [liveQuotes, setLiveQuotes] = useState<Record<string, RealtimeQuote>>({});
+  const [liveSeries, setLiveSeries] = useState<Record<string, number[]>>({});
   const [analysisError, setAnalysisError] = useState("");
   const [analysisReload, setAnalysisReload] = useState(0);
   const [filter, setFilter] = useState("all");
@@ -104,7 +106,7 @@ export function Watchlist() {
   const [detailed, setDetailed] = useState(() => localStorage.getItem("alphak.watch.view") === "detailed");
   const [focusSymbols, setFocusSymbols] = useState<string[]>(() => { try { const saved = JSON.parse(localStorage.getItem("alphak.watch.focus") || "[]"); return Array.isArray(saved) ? saved.filter(v => typeof v === "string") : []; } catch { return []; } });
   const tableRef = useRef<HTMLDivElement>(null);
-  const rowHeight = detailed ? 88 : 64;
+  const rowHeight = detailed ? 104 : 56;
   const viewportHeight = 460;
   const overscan = 8;
   const [fields, setFields] = useState(() => {
@@ -128,7 +130,7 @@ export function Watchlist() {
     setError("");
     Promise.all([api.watchlists(), api.settings()])
       .then(([nextGroups, nextSettings]) => {
-        setGroups(nextGroups);
+        setGroups(nextGroups.map(g => g.id === ALL_WATCHLIST ? { ...g, name: "全部样本" } : g));
         setSettings(nextSettings);
         setSelected((current) => current || nextGroups[0]?.id || "");
       })
@@ -200,17 +202,87 @@ export function Watchlist() {
     });
     if (orderBy !== "manual") items.sort((x, y) => {
       const a = analysisMap.get(x.symbol), b = analysisMap.get(y.symbol);
-      const av = sortValue(a, orderBy);
-      const bv = sortValue(b, orderBy);
+      const value = (analysis: WatchAnalysis | undefined, symbol: string) => {
+        const live = liveQuotes[symbol];
+        if (live && ["price", "change_amount", "change", "amount"].includes(orderBy)) {
+          return orderBy === "price" ? live.close : orderBy === "change_amount" ? live.close - live.pre_close : orderBy === "change" ? live.change_pct : live.amount;
+        }
+        return sortValue(analysis, orderBy);
+      };
+      const av = value(a, x.symbol);
+      const bv = value(b, y.symbol);
       return av == null ? bv == null ? 0 : 1 : bv == null ? -1 : (sortDirection === "asc" ? av - bv : bv - av);
     });
     return items;
-  }, [current, listQuery, filter, focusSymbols, orderBy, sortDirection, analysisMap]);
+  }, [current, listQuery, filter, focusSymbols, orderBy, sortDirection, analysisMap, liveQuotes]);
   const totalItems = filteredItems.length;
   const virtualize = totalItems > 100;
   const startIndex = virtualize ? Math.max(0, Math.floor(scrollTop / rowHeight) - overscan) : 0;
   const endIndex = virtualize ? Math.min(totalItems, Math.ceil((scrollTop + viewportHeight) / rowHeight) + overscan) : totalItems;
   const visibleItems = filteredItems.slice(startIndex, endIndex);
+  const liveSymbolKey = [...new Set(groups.flatMap(g => g.items.map(item => item.symbol)))].sort().map((symbol) => symbol).join(",");
+  useEffect(() => {
+    if (!liveSymbolKey) return;
+    let active = true;
+    let loading = false;
+    const clientId = crypto.randomUUID();
+    let sampling = false;
+    let leaseChecked = 0;
+    let fetchedOnce = false;
+    const load = () => {
+      if (document.hidden || loading) return;
+      loading = true;
+      const symbols = liveSymbolKey.split(",");
+      (async () => {
+        const items: RealtimeQuote[] = [];
+        if (Date.now() - leaseChecked > 15000) {
+          const leases = await Promise.all(Array.from({ length: Math.ceil(symbols.length / 120) }, (_, batch) =>
+            api.subscription(`${clientId}-${batch}`, symbols.slice(batch * 120, (batch + 1) * 120), "realtime")));
+          sampling = leases.some(lease => lease.sampling); leaseChecked = Date.now();
+        }
+        if (!sampling && fetchedOnce) return items;
+        fetchedOnce = true;
+        let failures = 0;
+        // Three concurrent batches keep the source load bounded; each request has at most 20 symbols.
+        for (let offset = 0; offset < symbols.length && active; offset += 60) {
+          const batches = Array.from({ length: Math.ceil(Math.min(60, symbols.length - offset) / 20) }, (_, i) =>
+            api.realtimeQuotes(symbols.slice(offset + i * 20, offset + (i + 1) * 20)));
+          const results = await Promise.allSettled(batches);
+          for (const result of results) {
+            if (result.status === "fulfilled") items.push(...result.value);
+            else failures++;
+          }
+        }
+        if (active && failures) setNotice(`部分实时行情获取失败（${failures}批），保留上次数据并自动重试`);
+        return items;
+      })()
+        .then((items) => {
+          if (!active) return;
+          setLiveQuotes((previous) => {
+            const next = { ...previous };
+            for (const item of items) next[item.symbol] = item;
+            return next;
+          });
+          setLiveSeries((previous) => {
+            const next = { ...previous };
+            for (const item of items) {
+              const series = [...(next[item.symbol] ?? []), item.close];
+              next[item.symbol] = series.slice(-30);
+            }
+            return next;
+          });
+        })
+        .catch(() => {
+          if (active) setNotice("实时行情订阅失败，保留上次数据并自动重试");
+        })
+        .finally(() => { loading = false; });
+    };
+    void load();
+    const timer = window.setInterval(load, 3000);
+    return () => { active = false; window.clearInterval(timer); for (let batch = 0; batch < Math.ceil(liveSymbolKey.split(",").length / 120); batch++) {
+      void api.subscription(`${clientId}-${batch}`, [], "realtime").catch(() => {});
+    } };
+  }, [liveSymbolKey]);
   const columnCount = 5 + Object.values(fields).filter(Boolean).length;
   useEffect(() => {
     setScrollTop(0);
@@ -235,7 +307,7 @@ export function Watchlist() {
     }
     setBusy(false);
     if (failed.length) setAssignError(`以下股票未加入，可重试：${failed.join("、")}`);
-    else { setAssignOpen(false); setChecked([]); setNotice("已加入分组，全部自选保持不变"); }
+    else { setAssignOpen(false); setChecked([]); setNotice("已加入分组，全部样本保持不变"); }
   };
   const batchAdd = async () => {
     if (!current) return;
@@ -388,7 +460,7 @@ export function Watchlist() {
       setGroups(await api.clearGroup(current.id));
       setConfirmClear(false);
       setMenu(null);
-      setNotice(`已清空「${current.name}」中的自选记录，行情数据保留。`);
+      setNotice(`已清空「${current.name}」中的样本记录，行情数据保留。`);
     } catch (err) {
       setNotice(err instanceof Error ? err.message : "清空分组失败");
     } finally {
@@ -504,13 +576,13 @@ export function Watchlist() {
   };
 
   if (error) return <ErrorState message={error} onRetry={load} />;
-  if (!groups.length) return <Loading label="正在读取自选" />;
+  if (!groups.length) return <Loading label="正在读取样本" />;
 
   return (
     <div className="page watch-page">
       <header className="page-head compact-head">
         <div>
-          <h1 className="display">自选工作台</h1>
+          <h1 className="display">样本工作台</h1>
         </div>
         <div className="head-aside">
           <span className="stamp">A 股 · 日线观察</span>
@@ -523,13 +595,13 @@ export function Watchlist() {
       <div className="watch-layout">
         <aside className="panel group-panel">
           <div className="panel-head">
-            <div><span className="eyebrow mono">GROUPS</span><h2>自选</h2></div>
+            <div><span className="eyebrow mono">GROUPS</span><h2>样本</h2></div>
             <div className="inline-actions">
               <button className="icon-btn" aria-label="管理当前分组" title="管理当前分组" disabled={isAll} onClick={event => { event.stopPropagation(); if (current) openMenu({ clientX: event.currentTarget.getBoundingClientRect().left, clientY: event.currentTarget.getBoundingClientRect().bottom, preventDefault() {} }, current.id); }}><Palette size={15} /></button>
               <button className="icon-btn" onClick={() => setShowNewGroup(true)} aria-label="新建分组" title="新建分组"><Plus size={15} /></button>
             </div>
           </div>
-          <div className="group-list" role="tablist" aria-label="自选分组">
+          <div className="group-list" role="tablist" aria-label="样本分组">
             {groups.map((group) => (
               <button
                 key={group.id}
@@ -541,7 +613,7 @@ export function Watchlist() {
                 onContextMenu={(event) => openMenu(event, group.id)}
                 title={group.id === ALL_WATCHLIST ? "全部关注的股票，跨组去重" : "右键管理分组"}
               >
-                <span className="group-name"><i className="group-color" style={{ background: group.color || "#8a8175" }} />{group.name}</span>
+                <span className="group-name"><i className="group-color" style={{ background: group.color || "#8a8175" }} />{group.id === ALL_WATCHLIST ? "全部样本" : group.name}</span>
                 <span className="mono muted">{group.items.length}</span>
               </button>
             ))}
@@ -564,8 +636,8 @@ export function Watchlist() {
               </div>
             </div></GroupDialog>
           ) : null}
-          {confirmDelete ? <GroupDialog title="删除分组确认" alert onClose={() => { if (!busy) setConfirmDelete(false); }}><div className="group-create"><p>删除「{current?.name}」分组？股票仍保留在全部自选中，其他分组不受影响。</p><div className="inline-actions"><button className="btn btn-solid" disabled={busy} onClick={deleteGroup}>确认删除</button><button className="btn btn-ghost" onClick={() => setConfirmDelete(false)}>取消</button></div></div></GroupDialog> : null}
-          {confirmClear ? <GroupDialog title="清空分组确认" alert onClose={() => { if (!busy) setConfirmClear(false); }}><div className="group-create"><p>清空「{current?.name}」的股票归类？全部自选与其他分组会保留。</p><div className="inline-actions"><button className="btn btn-solid" disabled={busy} onClick={clearGroup}>确认清空</button><button className="btn btn-ghost" onClick={() => setConfirmClear(false)}>取消</button></div></div></GroupDialog> : null}
+          {confirmDelete ? <GroupDialog title="删除分组确认" alert onClose={() => { if (!busy) setConfirmDelete(false); }}><div className="group-create"><p>删除「{current?.name}」分组？股票仍保留在全部样本中，其他分组不受影响。</p><div className="inline-actions"><button className="btn btn-solid" disabled={busy} onClick={deleteGroup}>确认删除</button><button className="btn btn-ghost" onClick={() => setConfirmDelete(false)}>取消</button></div></div></GroupDialog> : null}
+          {confirmClear ? <GroupDialog title="清空分组确认" alert onClose={() => { if (!busy) setConfirmClear(false); }}><div className="group-create"><p>清空「{current?.name}」的股票归类？全部样本与其他分组会保留。</p><div className="inline-actions"><button className="btn btn-solid" disabled={busy} onClick={clearGroup}>确认清空</button><button className="btn btn-ghost" onClick={() => setConfirmClear(false)}>取消</button></div></div></GroupDialog> : null}
           {menu ? (() => {
             const group = groups.find((item) => item.id === menu.id);
             if (!group) return null;
@@ -587,7 +659,7 @@ export function Watchlist() {
 
         <section className="panel watch-main">
           <div className="panel-head">
-            <div><span className="eyebrow mono">TRACKED</span><h2>{current?.name ?? "自选"}</h2></div>
+            <div><span className="eyebrow mono">TRACKED</span><h2>{isAll ? "全部样本" : current?.name ?? "样本"}</h2></div>
             <div className="inline-actions">
               <details className="field-menu">
                 <summary className="btn btn-ghost">字段</summary>
@@ -605,11 +677,11 @@ export function Watchlist() {
           </div>
 
           <div className="watch-toolbar">
-            <input className="input" value={listQuery} onChange={e => setListQuery(e.target.value)} placeholder="筛选名称 / 代码 / 备注" aria-label="筛选自选" />
-            <select className="select" value={orderBy === "manual" ? "manual" : `${orderBy}:${sortDirection}`} onChange={e => { const [key, direction] = e.target.value.split(":"); setOrderBy(key); setSortDirection(direction === "asc" ? "asc" : "desc"); }} aria-label="自选排序"><option value="manual">自定义顺序</option>{SORT_FIELDS.flatMap(([key, label]) => [<option key={`${key}:desc`} value={`${key}:desc`}>{label}从高到低</option>, <option key={`${key}:asc`} value={`${key}:asc`}>{label}从低到高</option>])}</select>
-            <button className="btn btn-ghost" aria-pressed={detailed} onClick={() => setDetailed(v => !v)}>{detailed ? "切换紧凑视图" : "切换详细视图"}</button>
+            <input className="input" value={listQuery} onChange={e => setListQuery(e.target.value)} placeholder="筛选名称 / 代码 / 备注" aria-label="筛选样本" />
+            <select className="select" value={orderBy === "manual" ? "manual" : `${orderBy}:${sortDirection}`} onChange={e => { const [key, direction] = e.target.value.split(":"); setOrderBy(key); setSortDirection(direction === "asc" ? "asc" : "desc"); }} aria-label="样本排序"><option value="manual">自定义顺序</option>{SORT_FIELDS.flatMap(([key, label]) => [<option key={`${key}:desc`} value={`${key}:desc`}>{label}从高到低</option>, <option key={`${key}:asc`} value={`${key}:asc`}>{label}从低到高</option>])}</select>
+            <div className="segmented watch-view-switch" aria-label="表格视图"><button className={!detailed ? "is-active" : ""} aria-pressed={!detailed} onClick={() => setDetailed(false)}>紧凑</button><button className={detailed ? "is-active" : ""} aria-pressed={detailed} onClick={() => setDetailed(true)}>详细</button></div>
           </div>
-          <div className="watch-filter-tabs" role="group" aria-label="自选筛选">{([{ value: "all", label: "全部", icon: LayoutGrid }, { value: "focus", label: "重点关注", icon: Star }, { value: "breakout", label: "趋势突破", icon: TrendingUp }, { value: "volatility", label: "高波动", icon: Activity }, { value: "signals", label: "有信号", icon: Zap }]).map(({ value, label, icon: Icon }) => <button key={value} className={`btn btn-ghost watch-filter-${value} ${filter === value ? "is-active" : ""}`} aria-pressed={filter === value} onClick={() => setFilter(value)}><Icon size={14} aria-hidden="true" />{label}</button>)}<span className="muted">{isAll ? "全部自选" : "当前分组"} {totalItems} / {current?.items.length ?? 0}</span></div>
+          <p className="watch-view-hint muted">{detailed ? "详细视图 · 展示行业、成交量、日线覆盖及触发依据" : "紧凑视图 · 展示行情和信号摘要"}<button className="text-btn" onClick={()=>navigate("/market/breadth?members=1")}>查看市场行情样本成分</button></p><div className="watch-filter-tabs" role="group" aria-label="样本筛选">{([{ value: "all", label: "全部", icon: LayoutGrid }, { value: "focus", label: "重点关注", icon: Star }, { value: "breakout", label: "趋势突破", icon: TrendingUp }, { value: "volatility", label: "高波动", icon: Activity }, { value: "signals", label: "有信号", icon: Zap }]).map(({ value, label, icon: Icon }) => <button key={value} className={`btn btn-ghost watch-filter-${value} ${filter === value ? "is-active" : ""}`} aria-pressed={filter === value} onClick={() => setFilter(value)}><Icon size={14} aria-hidden="true" />{label}</button>)}<span className="muted">{isAll ? "全部样本" : "当前分组"} {totalItems} / {current?.items.length ?? 0}</span></div>
           <div className="add-row">
             <div className="watch-search">
               <input className="input mono" value={symbol} onChange={(event) => { setSymbol(event.target.value); setSelectedSymbol(""); setSearchOpen(true); }} onFocus={() => setSearchOpen(true)} onBlur={() => window.setTimeout(() => setSearchOpen(false), 160)} onKeyDown={(event) => { if (event.key === "Enter" && !event.nativeEvent.isComposing) { setSearchOpen(false); void add(); } }} placeholder="搜索名称 / 代码 / 拼音" aria-label="证券代码" aria-expanded={searchOpen && Boolean(symbol.trim()) && !selectedSymbol} />
@@ -623,7 +695,7 @@ export function Watchlist() {
             <input className="input" value={note} onChange={(event) => setNote(event.target.value)} placeholder="备注（可选）" aria-label="备注" />
             <button className="btn btn-solid" onClick={() => void add()} disabled={busy || !symbol.trim()}><Plus size={14} /> 加入</button>
           </div>
-          <div className="watch-batch-bar"><button className="text-btn" disabled={busy} onClick={() => setBatchOpen(v => !v)}>批量添加</button><span className="muted">勾选 {checked.length} 只</span><button className="text-btn" disabled={busy || !checked.length || !customGroups.length} onClick={() => { setAssignTarget(customGroups.find(g => g.id !== current?.id)?.id ?? customGroups[0]?.id ?? ""); setAssignError(""); setAssignOpen(true); }}>加入分组</button><button className="text-btn" disabled={busy || !checked.length} onClick={() => setConfirmBatch(true)}>批量移除</button>{confirmBatch ? <span role="alert">{isAll ? "确认取消关注所选股票？将同时从各分组移除。" : "确认从当前分组移除？全部自选仍保留。"}<button className="text-btn" disabled={busy} onClick={() => void batchRemove()}>确认批量移除</button><button className="text-btn" onClick={() => setConfirmBatch(false)}>取消</button></span> : null}</div>
+          <div className="watch-batch-bar"><button className="text-btn" disabled={busy} onClick={() => setBatchOpen(v => !v)}>批量添加</button><span className="muted">勾选 {checked.length} 只</span><button className="text-btn" disabled={busy || !checked.length || !customGroups.length} onClick={() => { setAssignTarget(customGroups.find(g => g.id !== current?.id)?.id ?? customGroups[0]?.id ?? ""); setAssignError(""); setAssignOpen(true); }}>加入分组</button><button className="text-btn" disabled={busy || !checked.length} onClick={() => setConfirmBatch(true)}>批量移除</button>{confirmBatch ? <span role="alert">{isAll ? "确认取消关注所选股票？将同时从各分组移除。" : "确认从当前分组移除？全部样本仍保留。"}<button className="text-btn" disabled={busy} onClick={() => void batchRemove()}>确认批量移除</button><button className="text-btn" onClick={() => setConfirmBatch(false)}>取消</button></span> : null}</div>
           {batchOpen ? <div className="watch-batch-add"><textarea className="input" rows={3} value={batchText} onChange={e => setBatchText(e.target.value)} aria-label="批量证券" placeholder="每行一只名称或代码，也可用逗号分隔；单次最多 50 只" /><button className="btn btn-solid" disabled={busy || !batchText.trim()} onClick={() => void batchAdd()}>{busy ? "处理中…" : "批量加入当前分组"}</button></div> : null}
           {notice ? <p className="inline-notice" role="status">{notice}</p> : null}
           {importErrors.length ? <ul className="import-errors">{importErrors.map((error) => <li key={error}>{error}</li>)}</ul> : null}
@@ -643,10 +715,10 @@ export function Watchlist() {
                   {fields.note ? <col style={{ width: 128 }} /> : null}{fields.asOf ? <col style={{ width: 124 }} /> : null}
                   <col style={{ width: 136 }} />
                 </colgroup>
-                <thead><tr><th><input type="checkbox" aria-label="全选当前筛选结果" checked={totalItems > 0 && filteredItems.every(i => checked.includes(i.id))} onChange={e => setChecked(e.target.checked ? filteredItems.map(i => i.id) : [])} /></th><th aria-label="排序" /><th aria-label="重点关注" /><th>证券</th>{fields.price ? <th className="num" aria-sort={sortState("price", "change_amount")}>{sortButton("price", "最新价")} / {sortButton("change_amount", "涨跌额")}</th> : null}{fields.change ? <th className="num" aria-sort={sortState("change")}>{sortButton("change", "当日涨跌幅", "按数据日期对应交易日的涨跌幅排序；当日数据未更新时使用最近交易日，不代表实时行情")}</th> : null}{fields.spark ? <th title="历史日线走势，仅供观察趋势；当日表现请查看当日涨跌幅及日线日期">日线走势</th> : null}{fields.amount ? <th className="num" aria-sort={sortState("amount", "volume_ratio")}>{sortButton("amount", "成交额")} / {sortButton("volume_ratio", "量比")}</th> : null}{fields.score ? <th className="num" aria-sort={sortState("score")}>{sortButton("score", "规则符合分")}</th> : null}{fields.trend ? <th>趋势 / 信号</th> : null}{fields.note ? <th>备注</th> : null}{fields.asOf ? <th>日线日期 / 来源</th> : null}<th className="num">操作</th></tr></thead>
+                <thead><tr><th><input type="checkbox" aria-label="全选当前筛选结果" checked={totalItems > 0 && filteredItems.every(i => checked.includes(i.id))} onChange={e => setChecked(e.target.checked ? filteredItems.map(i => i.id) : [])} /></th><th aria-label="排序" /><th aria-label="重点关注" /><th>证券</th>{fields.price ? <th className="num" aria-sort={sortState("price", "change_amount")}>{sortButton("price", "最新价")} / {sortButton("change_amount", "涨跌额")}</th> : null}{fields.change ? <th className="num" aria-sort={sortState("change")}>{sortButton("change", "当日涨跌幅", "按数据日期对应交易日的涨跌幅排序；当日数据未更新时使用最近交易日，不代表实时行情")}</th> : null}{fields.spark ? <th title="AxData 实时快照，每 3 秒采样；打开页面后累积">实时走势</th> : null}{fields.amount ? <th className="num" aria-sort={sortState("amount", "volume_ratio")}>{sortButton("amount", "成交额")} / {sortButton("volume_ratio", "量比")}</th> : null}{fields.score ? <th className="num" aria-sort={sortState("score")}>{sortButton("score", "规则符合分")}</th> : null}{fields.trend ? <th>趋势 / 信号</th> : null}{fields.note ? <th>备注</th> : null}{fields.asOf ? <th>行情时间 / 来源</th> : null}<th className="num">操作</th></tr></thead>
                 <tbody>
                   {startIndex > 0 ? <tr aria-hidden="true" className="virtual-spacer" style={{ height: startIndex * rowHeight }}><td colSpan={columnCount} /></tr> : null}
-                  {visibleItems.map((item) => { const a = analysisMap.get(item.symbol); return (
+                  {visibleItems.map((item) => { const a = analysisMap.get(item.symbol); const lq = liveQuotes[item.symbol]; const price = lq?.close ?? a?.close; const change = lq ? lq.close - lq.pre_close : a?.change; const changePct = lq?.change_pct ?? a?.change_pct; const spark = (liveSeries[item.symbol]?.length ?? 0) >= 2 ? liveSeries[item.symbol] : a?.sparkline ?? []; return (
                     <tr
                       key={item.id}
                       draggable={!busy && orderBy === "manual" && filter === "all" && !listQuery.trim()}
@@ -662,21 +734,21 @@ export function Watchlist() {
                       <td className="drag-handle" aria-label={`拖拽 ${item.name} 排序`} title="拖拽排序"><GripVertical size={14} /></td>
                       <td><button className={`icon-btn watch-focus ${focusSymbols.includes(item.symbol) ? "is-active" : ""}`} aria-pressed={focusSymbols.includes(item.symbol)} aria-label={`重点关注 ${item.name}`} onClick={() => toggleFocus(item.symbol)}><Star size={14} fill={focusSymbols.includes(item.symbol) ? "currentColor" : "none"} /></button></td>
                       <td className="row-link"><button className="watch-stock-button" onClick={() => setInspect(item.symbol)}><span className="cell-title">{item.name}</span><span className="cell-sub mono">{item.symbol}</span>{detailed ? <span className="cell-sub">{a?.industry || "行业未知"}</span> : null}</button></td>
-                      {fields.price ? <td className="num mono">{num(a?.close)}<span className={`cell-sub ${changeClass(a?.change)}`}>{a?.change != null ? `${a.change > 0 ? "+" : ""}${num(a.change)}` : "—"}</span></td> : null}
-                      {fields.change ? <td className="num"><Change value={a?.change_pct} /></td> : null}
-                      {fields.spark ? <td><Sparkline values={a?.sparkline ?? []} /></td> : null}
-                      {fields.amount ? <td className="num mono">{compact(a?.amount)}<span className="cell-sub">量比 {a?.volume_ratio != null ? `${num(a.volume_ratio)}×` : "—"}</span>{detailed ? <span className="cell-sub">成交量 {compact(a?.volume)}（源口径）</span> : null}</td> : null}
-                      {fields.score ? <td className="num mono" title="规则符合分 v1，非预测胜率，尚未回测">{a?.score != null ? `${a.score}/100` : "—"}</td> : null}
-                      {fields.trend ? <td title={a?.notice}><span>{a?.trend || "待分析"}</span><span className="cell-sub">{a?.status === "demo" ? "演示 · 不参与" : a?.status === "stale" ? "日线待更新" : a && a.technical_bars_count < 21 ? `有效日线 ${a.technical_bars_count}/21 条` : a?.status === "ready" ? a.signals[0]?.title || "暂无条件触发" : "数据待补齐"}</span>{a?.history_status ? <span className="cell-sub">{a.history_status}{a.technical_bars_count >= 21 && a.technical_bars_count < 60 ? ` · ${a.technical_bars_count}/60 条` : ""}</span> : null}</td> : null}
+                      {fields.price ? <td className="num mono">{num(price)}<span className={`cell-sub ${changeClass(change)}`}>{change != null ? `${change > 0 ? "+" : ""}${num(change)}` : "—"}</span></td> : null}
+                      {fields.change ? <td className="num"><Change value={changePct} /></td> : null}
+                      {fields.spark ? <td><Sparkline values={spark} /></td> : null}
+                      {fields.amount ? <td className="num mono">{compact(lq?.amount ?? a?.amount)}<span className="cell-sub">量比 {a?.volume_ratio != null ? `${num(a.volume_ratio)}×` : "—"}</span>{detailed ? <span className="cell-sub">成交量 {compact(lq?.volume ?? a?.volume)}（源口径）</span> : null}</td> : null}
+                      {fields.score ? <td className="num mono" title="规则符合分 v1，非预测胜率，尚未回测">{a?.score != null ? `${a.score}/100` : "—"}{detailed ? <span className="cell-sub">有效日线 {a?.technical_bars_count ?? 0} 条</span> : null}</td> : null}
+                      {fields.trend ? <td title={a?.notice}><span>{a?.trend || "待分析"}</span><span className="cell-sub">{a?.status === "demo" ? "演示 · 不参与" : a?.status === "stale" ? "日线待更新" : a && a.technical_bars_count < 21 ? `有效日线 ${a.technical_bars_count}/21 条` : a?.status === "ready" ? a.signals[0]?.title || "暂无条件触发" : "数据待补齐"}</span>{detailed && a?.signals[0] ? <span className="cell-sub watch-rule-detail" title={a.signals[0].evidence}>{a.signals[0].evidence}</span> : null}{detailed && a?.history_status ? <span className="cell-sub">{a.history_status}{a.technical_bars_count >= 21 && a.technical_bars_count < 60 ? ` · ${a.technical_bars_count}/60 条` : ""}</span> : null}</td> : null}
                       {fields.note ? <td className="muted">
                         <button className="note-link" onClick={() => startNote(item.id, item.note)} title="编辑备注">{item.note || "添加备注"}</button>
                       </td> : null}
-                      {fields.asOf ? <td className="mono muted">{dateLabel(a?.as_of)}<span className="cell-sub">{a?.source || "待更新"}{a?.status === "stale" ? " · 已过期" : ""}</span></td> : null}
+                      {fields.asOf ? <td className="mono muted">{lq ? (lq.updated_at || "行情时间未知") : dateLabel(a?.as_of)}<span className="cell-sub">{lq?.source || a?.source || "待更新"}{lq?.last_checked_at ? ` · 检查 ${new Date(lq.last_checked_at).toLocaleTimeString("zh-CN", {hour12:false})}` : ""}{a?.status === "stale" && !lq ? " · 已过期" : ""}</span></td> : null}
                       <td className="num">
                         <button className="icon-btn" onClick={() => setAlertSymbol(item.symbol)} aria-label={`设置 ${item.name} 提醒`}><BellPlus size={14} /></button>
                         <button className="icon-btn" onClick={() => navigate(`/stock/${item.symbol}`)} aria-label={`打开 ${item.name} 完整分析`}><ArrowUpRight size={14} /></button>
                         <button className="icon-btn" onClick={() => startNote(item.id, item.note)} aria-label={`编辑 ${item.name} 备注`} disabled={busy}><Pencil size={13} /></button>
-                        <button className="icon-btn" onClick={() => remove(item.id)} aria-label={`${isAll ? "取消关注" : "移出分组"} ${item.name}`} title={isAll ? "取消关注，并从所有分组移除" : "仅移出本组，全部自选保留"} disabled={busy}><Trash2 size={14} /></button>
+                        <button className="icon-btn" onClick={() => remove(item.id)} aria-label={`${isAll ? "取消关注" : "移出分组"} ${item.name}`} title={isAll ? "取消关注，并从所有分组移除" : "仅移出本组，全部样本保留"} disabled={busy}><Trash2 size={14} /></button>
                       </td>
                     </tr>
                   ); })}
@@ -684,22 +756,22 @@ export function Watchlist() {
                 </tbody>
               </table>
             </div>
-          ) : <Empty title={current?.items.length ? "没有符合当前筛选条件的股票" : "这个分组还没有股票"} note={current?.items.length ? "可清除搜索或切换全部自选；技术筛选仅使用新鲜真实日线。" : "输入名称或代码加入，或批量添加、导入 CSV。"} />}
-          <p className="panel-footnote">自定义顺序且未筛选时可拖拽排序。迷你图为有效复权日线；量比使用前 20 日同源均量。重点关注、列与视图偏好保存在此浏览器。刷新失败保留上次数据。</p>
+          ) : <Empty title={current?.items.length ? "没有符合当前筛选条件的股票" : "这个分组还没有股票"} note={current?.items.length ? "可清除搜索或切换全部样本；技术筛选仅使用新鲜真实日线。" : "输入名称或代码加入，或批量添加、导入 CSV。"} />}
+          <p className="panel-footnote">自定义顺序且未筛选时可拖拽排序。全部样本每 3 秒分批刷新，每批最多 20 只；实时走势来自 AxData 快照采样，打开页面后累积；规则分析仍基于已完成日线。量比使用前 20 日同源均量。重点关注、列与视图偏好保存在此浏览器。刷新失败保留上次数据。</p>
         </section>
       </div>
       {assignOpen ? <GroupDialog title="加入分组" onClose={() => { if (!busy) setAssignOpen(false); }}>
-        <p>将勾选的 {checked.length} 只股票加入分组，已有归类和全部自选会保留。</p>
+        <p>将勾选的 {checked.length} 只股票加入分组，已有归类和全部样本会保留。</p>
         <label className="field">目标分组<select className="input" value={assignTarget} onChange={e => setAssignTarget(e.target.value)} disabled={busy}>{customGroups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}</select></label>
         {assignError ? <p role="alert">{assignError}</p> : null}
         <footer className="watch-dialog-foot"><button className="btn btn-ghost" disabled={busy} onClick={() => setAssignOpen(false)}>取消</button><button className="btn btn-solid" disabled={busy || !assignTarget} onClick={() => void assignToGroup()}>{busy ? "处理中…" : "确认加入"}</button></footer>
       </GroupDialog> : null}
-      {editingNote ? <GroupDialog title="编辑自选备注" onClose={() => { if (!busy) setEditingNote(null); }}>
+      {editingNote ? <GroupDialog title="编辑样本备注" onClose={() => { if (!busy) setEditingNote(null); }}>
         <form onSubmit={e => { e.preventDefault(); void saveNote(editingNote); }}>
           <p>{groups.flatMap(g => g.items).find(i => i.id === editingNote)?.name} <span className="mono muted">{groups.flatMap(g => g.items).find(i => i.id === editingNote)?.symbol}</span></p>
           <label className="field">备注<textarea className="input watch-note-draft" rows={6} value={noteDraft} onChange={e => setNoteDraft(e.target.value)} autoFocus disabled={busy} placeholder="记录关注原因、观察价位或后续计划…" onKeyDown={e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); if (!busy) void saveNote(editingNote); } }} /></label>
           {noteError ? <p role="alert" className="inline-notice">{noteError}</p> : null}
-          <p className="muted">{isAll ? "自选备注" : "仅修改当前分组中的备注"} · ⌘ / Ctrl + Enter 保存</p>
+          <p className="muted">{isAll ? "样本备注" : "仅修改当前分组中的备注"} · ⌘ / Ctrl + Enter 保存</p>
           <footer className="watch-dialog-foot"><button type="button" className="btn btn-ghost" disabled={busy} onClick={() => setEditingNote(null)}>取消</button><button className="btn btn-solid" disabled={busy}>{busy ? "保存中…" : "保存备注"}</button></footer>
         </form>
       </GroupDialog> : null}

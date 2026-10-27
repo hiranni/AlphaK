@@ -1,18 +1,25 @@
 mod adapter;
+mod adaptive;
 mod db;
 mod error;
+mod execution;
 mod indicators;
 mod ingest;
 mod live;
 mod market;
 mod market_breadth;
 mod models;
+mod paper_strategy;
+mod persistence;
+mod quant;
 mod repository;
 mod routes;
 mod security;
 mod seed;
 mod sources;
+mod storage_benchmark;
 mod sync;
+mod trading_research;
 mod workbench;
 
 use std::net::SocketAddr;
@@ -31,6 +38,29 @@ async fn main() {
         )
         .init();
 
+    if std::env::args().any(|a| a == "--storage-benchmark") {
+        storage_benchmark::run().await.expect("storage benchmark");
+        return;
+    }
+    if std::env::args().any(|a| a == "--storage-report") {
+        let path = std::env::var("ALPHAK_DB").unwrap_or_else(|_| "alphak.db".into());
+        let conn =
+            rusqlite::Connection::open_with_flags(path, rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY)
+                .expect("open read-only database");
+        println!(
+            "{}",
+            persistence::diagnostics(&conn).expect("storage diagnostics")
+        );
+        return;
+    }
+    if std::env::args().any(|a| a == "--schema-report") {
+        let conn = db::init_db(":memory:").expect("schema probe");
+        println!(
+            "{}",
+            persistence::schema_report(&conn).expect("schema report")
+        );
+        return;
+    }
     let bind = std::env::var("ALPHAK_BIND").unwrap_or_else(|_| "127.0.0.1:8080".into());
     let addr: SocketAddr = bind.parse().expect("ALPHAK_BIND must be host:port");
     if !addr.ip().is_loopback() {
@@ -58,6 +88,13 @@ async fn main() {
         );
     }
     let conn = db::init_db(&db_path).expect("failed to initialise sqlite database");
+    if std::env::args().any(|a| a == "--migrate-only") {
+        println!(
+            "{}",
+            persistence::diagnostics(&conn).expect("migration diagnostics")
+        );
+        return;
+    }
     let state = db::AppState {
         db: Arc::new(Mutex::new(conn)),
         sources: Arc::new(sources::SourceHub::new()),
@@ -79,6 +116,7 @@ async fn main() {
     spawn_scheduler(state.clone());
     routes::spawn_market_updates(state.clone());
     live::spawn_updates(state.clone());
+    quant::spawn(state.clone());
     sources::retry::spawn(state);
 
     let listener = TcpListener::bind(addr).await.expect("failed to bind");

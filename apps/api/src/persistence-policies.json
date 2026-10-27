@@ -1,0 +1,280 @@
+{
+  "policy_version": 1,
+  "auto_cleanup": false,
+  "tables": {
+    "instruments": {
+      "class": "long",
+      "auto_delete": false
+    },
+    "trading_calendar": {
+      "class": "long",
+      "auto_delete": false
+    },
+    "quote_daily": {
+      "class": "long",
+      "auto_delete": false
+    },
+    "financial_report": {
+      "class": "long",
+      "auto_delete": false
+    },
+    "financial_indicator": {
+      "class": "long",
+      "auto_delete": false
+    },
+    "daily_basic": {
+      "class": "long",
+      "auto_delete": false
+    },
+    "company_profile": {
+      "class": "long",
+      "auto_delete": false
+    },
+    "index_catalog": {
+      "class": "long",
+      "auto_delete": false
+    },
+    "index_quote": {
+      "class": "long",
+      "auto_delete": false
+    },
+    "index_member": {
+      "class": "long",
+      "auto_delete": false
+    },
+    "sector_catalog": {
+      "class": "long",
+      "auto_delete": false
+    },
+    "sector_member": {
+      "class": "long",
+      "auto_delete": false
+    },
+    "watchlist_group": {
+      "class": "long",
+      "auto_delete": false
+    },
+    "watchlist_item": {
+      "class": "long",
+      "auto_delete": false
+    },
+    "app_setting": {
+      "class": "long",
+      "auto_delete": false
+    },
+    "data_source_config": {
+      "class": "long",
+      "auto_delete": false
+    },
+    "backfill_audit": {
+      "class": "long",
+      "auto_delete": false
+    },
+    "reference_correction": {
+      "class": "long",
+      "auto_delete": false
+    },
+    "quote_snapshot": {
+      "class": "short",
+      "auto_delete": false,
+      "idle_days": 30,
+      "requires_untracked": true,
+      "retain_last_good": true
+    },
+    "market_snapshot": {
+      "class": "short",
+      "auto_delete": false,
+      "retention_days": 90
+    },
+    "live_cache": {
+      "class": "short",
+      "auto_delete": false
+    },
+    "quote_staging": {
+      "class": "short",
+      "auto_delete": false,
+      "success_days": 7,
+      "failure_days": 30,
+      "protect_active": true
+    },
+    "data_job": {
+      "class": "short",
+      "auto_delete": false,
+      "success_days": 30,
+      "failure_days": 90,
+      "protect_active": true
+    },
+    "source_retry_task": {
+      "class": "operational",
+      "auto_delete": false,
+      "terminal_days": 90,
+      "protect_active": true
+    },
+    "sync_checkpoint": {
+      "class": "operational",
+      "auto_delete": false
+    },
+    "data_freshness": {
+      "class": "operational",
+      "auto_delete": false
+    },
+    "quality_report": {
+      "class": "operational",
+      "auto_delete": false
+    },
+    "watch_alert": {
+      "class": "operational",
+      "auto_delete": false
+    },
+    "watch_alert_event": {
+      "class": "short",
+      "auto_delete": false,
+      "retention_days": 180
+    },
+    "lifecycle_policy": {
+      "class": "long",
+      "auto_delete": false
+    },
+    "input_manifest": {
+      "class": "long",
+      "auto_delete": false
+    },
+    "data_reference": {
+      "class": "long",
+      "auto_delete": false
+    },
+    "market_breadth_observation": {
+      "class": "long",
+      "auto_delete": false
+    },
+    "cleanup_audit": {
+      "class": "long",
+      "auto_delete": false
+    },
+    "cache_tombstone": {
+      "class": "long",
+      "auto_delete": false
+    },
+    "bar_cache": {
+      "class": "short",
+      "auto_delete": true,
+      "idle_days": 7,
+      "second_max_rows": 360,
+      "minute_max_rows": 1024
+    },
+    "subscription_lease": {
+      "class": "short",
+      "auto_delete": false,
+      "lease_seconds": 30
+    },
+    "cleanup_plan": {
+      "class": "short",
+      "auto_delete": false,
+      "retention_days": 90
+    },
+    "job_idempotency": {
+      "class": "short",
+      "auto_delete": false,
+      "retention_days": 90
+    },
+    "quant_monitor": {
+      "class": "long",
+      "auto_delete": false
+    },
+    "quant_observation": {
+      "class": "long",
+      "auto_delete": false
+    },
+    "research_workspace": {
+      "class": "long",
+      "auto_delete": false
+    },
+    "research_analysis": {
+      "class": "long",
+      "auto_delete": false
+    },
+    "paper_strategy": {
+      "class": "long",
+      "auto_delete": false
+    },
+    "paper_cash_ledger": {
+      "class": "long",
+      "auto_delete": false
+    },
+    "paper_strategy_event": {
+      "class": "long",
+      "auto_delete": false
+    },
+    "execution_run": {
+      "class": "long",
+      "auto_delete": false
+    },
+    "execution_order": {
+      "class": "long",
+      "auto_delete": false
+    },
+    "execution_fill": {
+      "class": "long",
+      "auto_delete": false
+    },
+    "execution_cash": {
+      "class": "long",
+      "auto_delete": false
+    },
+    "execution_lot": {
+      "class": "long",
+      "auto_delete": false
+    },
+    "execution_nav": {
+      "class": "long",
+      "auto_delete": false
+    }
+  },
+  "datasets": {
+    "second_*": {
+      "idle_days": 7,
+      "auto_delete": true
+    },
+    "minute_*": {
+      "idle_days": 7,
+      "auto_delete": true
+    },
+    "metrics": {
+      "idle_days": 30,
+      "auto_delete": true
+    },
+    "profile": {
+      "idle_days": 30,
+      "auto_delete": true
+    },
+    "financials": {
+      "idle_days": 30,
+      "auto_delete": true
+    },
+    "sectors": {
+      "idle_days": 7,
+      "auto_delete": true
+    },
+    "popularity": {
+      "idle_days": 7,
+      "auto_delete": true
+    },
+    "news": {
+      "idle_days": 7,
+      "auto_delete": true
+    },
+    "breadth": {
+      "idle_days": 30,
+      "auto_delete": true
+    },
+    "snapshot": {
+      "auto_delete": false,
+      "reason": "待跟踪资格判定接入，保留最后成功值"
+    },
+    "watch_history": {
+      "auto_delete": false,
+      "class": "operational",
+      "reason": "自选日线补齐状态，不能按行情TTL删除"
+    }
+  }
+}

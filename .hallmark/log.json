@@ -1,5 +1,33 @@
 [
   {
+    "date": "2026-10-26",
+    "macrostructure": "existing account execution ledger",
+    "theme": "Market Terminal",
+    "enrichment": "status icons and record tabs",
+    "brief": "B/S页区分成交、执行检查、持仓及资金流水，明确阻断原因"
+  },
+  {
+    "date": "2026-10-26",
+    "macrostructure": "compact account split workspace",
+    "theme": "Market Terminal",
+    "enrichment": "asset strip and parallel analysis",
+    "brief": "账户概况左右并排，交易约束展开；1440x900验证整页无需滚动"
+  },
+  {
+    "date": "2026-10-26",
+    "macrostructure": "account asset ledger",
+    "theme": "existing Market Terminal",
+    "enrichment": "asset hierarchy and benchmark comparison",
+    "brief": "账户概况资产看板与收益视图，明确缺失历史估值状态"
+  },
+  {
+    "date": "2026-10-26",
+    "macrostructure": "existing account workspace",
+    "theme": "existing",
+    "enrichment": "none",
+    "brief": "统一实盘账户资金文案，删除模拟与虚拟界面措辞"
+  },
+  {
     "date": "2026-10-22",
     "macrostructure": "Workbench",
     "theme": "Market Terminal",
@@ -27,5 +55,94 @@
     "theme": "Market Terminal",
     "enrichment": "none",
     "brief": "Compact data-first A-share terminal, cool navy and blue, short page titles; minute chart controls and real metrics/company/financial data retain the terminal layout"
+  },
+  {
+    "date": "2026-10-25",
+    "macrostructure": "Workbench",
+    "theme": "Market Terminal",
+    "brief": "行情状态收为标题内弹出提示；指数K线详情沿用个股布局；大盘与样本上涨占比双曲线，缺失历史不回填；数据设置导航后置"
+  },
+  {
+    "date": "2026-10-25",
+    "macrostructure": "Workbench",
+    "theme": "Market Terminal",
+    "brief": "样本工作台紧凑指标与分组导航；详细模式增加行业/成交量/覆盖/规则摘要；涨跌分布五档粒度、曲线显隐及样本成分入口，真实缺失标注"
+  },
+  {
+    "date": "2026-10-25",
+    "macrostructure": "Workbench",
+    "theme": "Market Terminal",
+    "brief": "量化管理采用紧凑策略表、低矮统计条、可展开观察和侧栏规则详情；沿用现有 tokens 与 Lucide；空态、加载、失败、暂停可见；无大卡片堆叠。"
+  },
+  {
+    "date": "2026-10-25",
+    "macrostructure": "Workbench",
+    "theme": "Market Terminal",
+    "brief": "量化改为无股票绑定的指标和策略说明表，沿用现有 tokens；旧监控入口迁至实盘，模型定义与实例配置明确分离。"
+  },
+  {
+    "date": "2026-10-26",
+    "macrostructure": "Workbench",
+    "theme": "Market Terminal",
+    "brief": "沿用紧凑定义表，扩充24指标与8情绪策略草案，增加研究方向筛选和真实计数；定义不绑定个股，文档逐项对应。"
+  },
+  {
+    "date": "2026-10-26",
+    "macrostructure": "Workbench",
+    "theme": "Market Terminal",
+    "brief": "实盘手动研究配置采用股票搜索、策略权重紧凑表与历史依据展开；保存不可变配置，研究报告不混同账户和订单。"
+  },
+  {
+    "date": "2026-10-26",
+    "macrostructure": "Workbench",
+    "theme": "Market Terminal",
+    "brief": "量化定义库压缩标题与导航留白；研究方向改可见按钮；策略计算契约以数据、建模、整合、上下文四页签展示，试验与目标实现分开标记。",
+    "critique": {
+      "philosophy": 4,
+      "hierarchy": 4,
+      "execution": 4,
+      "specificity": 5,
+      "restraint": 4,
+      "variety": 4
+    }
+  },
+  {
+    "date": "2026-10-26",
+    "macrostructure": "Workbench",
+    "theme": "Market Terminal",
+    "brief": "模块标题与二级导航合并一行，去除量化重复标题；实盘移除旧版监控，独立账户总览展示真实配置/报告统计及账户未接入状态。"
+  },
+  {
+    "date": "2026-10-26",
+    "task": "实盘策略初始资金登记",
+    "files": [
+      "apps/web/src/components/TradingOverview.tsx",
+      "apps/web/src/api.ts"
+    ],
+    "theme": "existing Market Terminal",
+    "notes": "沿用现有紧凑结构与颜色，初始现金和模型权重来自持久化记录，执行状态明确为待接入。"
+  },
+  {
+    "date": "2026-10-26",
+    "task": "账户管理和账户内策略操作",
+    "theme": "existing terminal tokens",
+    "files": [
+      "TradingOverview.tsx",
+      "TradingResearch.tsx",
+      "QuantWorkspace.tsx",
+      "styles.css"
+    ],
+    "notes": "列表到详情、资金初始化、归档恢复、配置换版、研究检查及操作记录；不虚构回测及成交。"
+  },
+  {
+    "date": "2026-10-26",
+    "task": "实盘表单控件统一",
+    "files": [
+      "TradingControls.tsx",
+      "TradingResearch.tsx",
+      "TradingOverview.tsx",
+      "styles.css"
+    ],
+    "notes": "自定义列表选择器支持搜索、方向键、Enter、Escape及外部关闭；复选框扩大点击范围；权重输入单位与禁用态。"
   }
 ]

@@ -121,6 +121,52 @@ pub fn parse_minutes(value: &Value, source: &str) -> Result<Vec<Bar>, String> {
     Ok(bars)
 }
 
+async fn second_fetch(
+    state: &AppState,
+    symbol: &str,
+    scale: &str,
+) -> Result<(Value, String), String> {
+    if !crate::sources::axdata::enabled() {
+        return Err("AxData 未配置，无法获取秒级 K 线".into());
+    }
+    let seconds: u32 = scale.parse().map_err(|_| "秒级周期错误")?;
+    if !matches!(seconds, 1 | 3 | 5 | 15 | 30 | 60) {
+        return Err("秒级周期只支持 1/3/5/15/30/60 秒".into());
+    }
+    let mut bars = crate::sources::axdata::seconds(
+        &state.sources.client,
+        symbol,
+        if seconds == 3 { 1 } else { seconds },
+    )
+    .await?;
+    if seconds == 3 {
+        let mut grouped: Vec<Bar> = Vec::new();
+        for mut bar in bars {
+            let timestamp: i64 = bar.date.parse().map_err(|_| "秒级时间错误")?;
+            bar.date = (timestamp / 3 * 3).to_string();
+            if let Some(last) = grouped.last_mut().filter(|last| last.date == bar.date) {
+                last.high = last.high.max(bar.high);
+                last.low = last.low.min(bar.low);
+                last.close = bar.close;
+                last.volume += bar.volume;
+                last.amount += bar.amount;
+            } else {
+                grouped.push(bar);
+            }
+        }
+        bars = grouped;
+    }
+    let keep = 360usize;
+    if bars.len() > keep {
+        bars = bars.split_off(bars.len() - keep);
+    }
+    crate::indicators::apply(&mut bars);
+    Ok((
+        serde_json::to_value(bars).map_err(|error| error.to_string())?,
+        "axdata".into(),
+    ))
+}
+
 async fn minute_fetch(
     state: &AppState,
     symbol: &str,
@@ -171,15 +217,34 @@ pub async fn cached_fetch(
 ) -> Result<Value, String> {
     symbol_code(symbol)?;
     let now = chrono::Utc::now().timestamp();
+    let retry_window = if dataset.starts_with("second_") {
+        ttl
+    } else {
+        60
+    };
     let previous = {
         let conn = state.db.lock().map_err(|_| "数据库忙")?;
-        let row: Option<(Option<String>,String,i64,i64,i64,String)> = conn.query_row("SELECT payload,source,fetched_at,attempted_at,failures,error FROM live_cache WHERE symbol=?1 AND dataset=?2",params![symbol,dataset],|row|Ok((row.get(0)?,row.get(1)?,row.get(2)?,row.get(3)?,row.get(4)?,row.get(5)?))).optional().map_err(|error|error.to_string())?;
+        conn.execute(
+            "UPDATE live_cache SET last_accessed_at=?3 WHERE symbol=?1 AND dataset=?2",
+            params![symbol, dataset, now],
+        )
+        .map_err(|e| e.to_string())?;
+        let mut row: Option<(Option<String>,String,i64,i64,i64,String)> = conn.query_row("SELECT payload,source,fetched_at,attempted_at,failures,error FROM live_cache WHERE symbol=?1 AND dataset=?2",params![symbol,dataset],|row|Ok((row.get(0)?,row.get(1)?,row.get(2)?,row.get(3)?,row.get(4)?,row.get(5)?))).optional().map_err(|error|error.to_string())?;
+        if dataset.starts_with("second_") || dataset.starts_with("minute_") {
+            if let Some(ref mut cached) = row {
+                if let Some(payload) =
+                    crate::persistence::load_bars(&conn, symbol, dataset).map_err(|e| e.message)?
+                {
+                    cached.0 = Some(payload);
+                }
+            }
+        }
         if let Some((payload, source, fetched, attempted, failures, error)) = &row {
-            if now - fetched < ttl || *failures >= 5 || now - attempted < 60 {
+            if now - fetched < ttl || *failures >= 5 || now - attempted < retry_window {
                 return payload.as_ref().and_then(|payload|serde_json::from_str::<Value>(payload).ok()).map(|data|json!({"data":data,"source":source,"updated_at":fetched,"stale":now-fetched>=ttl,"error":error,"retry_count":failures})).ok_or_else(||format!("{error}（已重试 {failures}/5 次）"));
             }
         }
-        let claimed = conn.execute("INSERT INTO live_cache(symbol,dataset,attempted_at) VALUES(?1,?2,?3) ON CONFLICT(symbol,dataset) DO UPDATE SET attempted_at=excluded.attempted_at WHERE live_cache.attempted_at <= ?3-60",params![symbol,dataset,now]).map_err(|error|error.to_string())?;
+        let claimed = conn.execute("INSERT INTO live_cache(symbol,dataset,attempted_at,last_accessed_at) VALUES(?1,?2,?3,?3) ON CONFLICT(symbol,dataset) DO UPDATE SET attempted_at=excluded.attempted_at,last_accessed_at=excluded.last_accessed_at WHERE live_cache.attempted_at <= ?3-?4",params![symbol,dataset,now,retry_window]).map_err(|error|error.to_string())?;
         if claimed == 0 {
             return Err("数据正在更新，请稍后重试".into());
         }
@@ -187,6 +252,8 @@ pub async fn cached_fetch(
     };
     let result = if let Some(scale) = dataset.strip_prefix("minute_") {
         minute_fetch(state, symbol, scale).await
+    } else if let Some(scale) = dataset.strip_prefix("second_") {
+        second_fetch(state, symbol, scale).await
     } else {
         enrichment(state, symbol, dataset).await
     };
@@ -197,6 +264,7 @@ pub async fn cached_fetch(
                 let snapshot: crate::sources::Snapshot =
                     serde_json::from_value(data.clone()).map_err(|error| error.to_string())?;
                 let source_id = match source.as_str() {
+                    "axdata" => crate::sources::SourceId::AxData,
                     "tencent" => crate::sources::SourceId::Tencent,
                     "sina" => crate::sources::SourceId::Sina,
                     _ => crate::sources::SourceId::Eastmoney,
@@ -258,7 +326,16 @@ pub async fn cached_fetch(
                     );
                 }
             }
-            conn.execute("UPDATE live_cache SET payload=?3,source=?4,fetched_at=?5,failures=0,error='' WHERE symbol=?1 AND dataset=?2",params![symbol,dataset,data.to_string(),source,now]).map_err(|error|error.to_string())?;
+            if dataset.starts_with("second_") || dataset.starts_with("minute_") {
+                let bars: Vec<Bar> =
+                    serde_json::from_value(data.clone()).map_err(|e| e.to_string())?;
+                crate::persistence::store_bars(&conn, symbol, dataset, &source, &bars, now)
+                    .map_err(|e| e.message)?;
+                // Preserve the legacy payload for rollback; no repeated full-series JSON writes.
+                conn.execute("UPDATE live_cache SET source=?3,fetched_at=?4,last_accessed_at=?4,failures=0,error='' WHERE symbol=?1 AND dataset=?2",params![symbol,dataset,source,now]).map_err(|e|e.to_string())?;
+            } else {
+                conn.execute("UPDATE live_cache SET payload=?3,source=?4,fetched_at=?5,last_accessed_at=?5,failures=0,error='' WHERE symbol=?1 AND dataset=?2",params![symbol,dataset,data.to_string(),source,now]).map_err(|error|error.to_string())?;
+            }
             Ok(
                 json!({"data":data,"source":source,"updated_at":now,"stale":false,"error":"","retry_count":0}),
             )
@@ -299,6 +376,43 @@ pub async fn minutes(
         notice: Some(format!(
             "{} · 每60秒更新 · 分钟线不复权{}",
             result["source"].as_str().unwrap_or(""),
+            if result["stale"] == true {
+                " · 更新失败，保留上次数据"
+            } else {
+                ""
+            }
+        )),
+        as_of: bars.last().map(|bar| bar.date.clone()).unwrap_or_default(),
+        bars,
+    })
+}
+
+pub async fn seconds(
+    state: &AppState,
+    symbol: &str,
+    name: &str,
+    period: &str,
+) -> Result<BarsResponse, String> {
+    let scale = period.strip_suffix('s').ok_or("秒级周期错误")?;
+    let result = cached_fetch(
+        state,
+        symbol,
+        &format!("second_{scale}"),
+        if scale == "3" { 3 } else { 5 },
+    )
+    .await?;
+    let bars: Vec<Bar> =
+        serde_json::from_value(result["data"].clone()).map_err(|error| error.to_string())?;
+    Ok(BarsResponse {
+        symbol: symbol.into(),
+        name: name.into(),
+        period: period.into(),
+        adjust: "none".into(),
+        adjust_available: false,
+        notice: Some(format!(
+            "AxData · 每{}秒 K 线 · {}秒轮询{}",
+            scale,
+            if scale == "3" { 3 } else { 5 },
             if result["stale"] == true {
                 " · 更新失败，保留上次数据"
             } else {

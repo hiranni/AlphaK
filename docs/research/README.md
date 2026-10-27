@@ -12,3 +12,11 @@
 先冻结池与数据能力，再预注册参数、做PIT与执行校验，最后才能运行真实数据实验。任何模型改动必须新版本；不得把论文里的成绩当成本平台成绩。
 
 - [策略实验与自动调优闭环](strategy-auto-tuning.md)：先跑技术基线、54组有限搜索、时间验证、候选选择、影子运行与晋升边界。
+
+- [指标与情绪策略模型目录](quant-model-catalog.md)：24 项指标、8 个策略草案，逐项解释情绪参与、学习、进出场、仓位与数据门槛。
+
+- [实盘研究配置与历史分析](trading-analysis-workspace.md)：当前可用的配置、分析接口、试验适配器、算法及未实现能力。
+
+- [量化模型计算与上下文契约](quant-engine-calculation-contract.md)：8个模型的输入、公式、建模、策略整合、上下文流转与实现缺口；[结构化目录](../specs/research/model-calculation-contracts.json)。
+
+- **[八个模型独立完整文档](models/README.md)**：逐模型数学推导、特征/数据处理、训练调优、B/S与仓位、情绪与收敛分析；附[当前实现一致性核对及补充清单](models/implementation-review.md)。版本design-2026-10-26.1，明确区分当前试验与未实现方案。

@@ -21,6 +21,9 @@ pub fn init_db(path: &str) -> rusqlite::Result<Connection> {
         r#"
         PRAGMA journal_mode = WAL;
         PRAGMA foreign_keys = ON;
+        PRAGMA busy_timeout = 1000;
+        PRAGMA synchronous = FULL;
+        PRAGMA wal_autocheckpoint = 1000;
 
         CREATE TABLE IF NOT EXISTS instruments (
             symbol TEXT PRIMARY KEY,
@@ -342,12 +345,40 @@ pub fn init_db(path: &str) -> rusqlite::Result<Connection> {
         rusqlite::params![now_iso()],
     )?;
     migrate_watchlist_collection(&conn)?;
+    migrate_sample_collection(&conn)?;
+    crate::quant::init(&conn)?;
+    crate::trading_research::init(&conn)?;
+    crate::paper_strategy::init(&conn)?;
+    crate::execution::init(&conn)?;
+    crate::persistence::init(&conn)?;
     Ok(conn)
 }
 
 /// Permanent collection independent of user-created groups. Existing memberships and
 /// their notes remain intact; the collection gets one stable row per symbol.
 pub const WATCHLIST_ALL: &str = "watchlist-all";
+
+fn migrate_sample_collection(conn: &Connection) -> rusqlite::Result<()> {
+    let migrated: bool = conn.query_row(
+        "SELECT EXISTS(SELECT 1 FROM app_setting WHERE key='sample.collection.v1')",
+        [],
+        |r| r.get(0),
+    )?;
+    if migrated {
+        return Ok(());
+    }
+    let tx = conn.unchecked_transaction()?;
+    tx.execute("WITH dates AS (SELECT DISTINCT trade_date FROM quote_daily WHERE source<>'demo' AND strftime('%w',trade_date) NOT IN ('0','6') AND NOT EXISTS(SELECT 1 FROM trading_calendar c WHERE c.trade_date=quote_daily.trade_date AND c.is_open=0) ORDER BY trade_date DESC LIMIT 2) INSERT OR IGNORE INTO watchlist_item(id,group_id,symbol,note,sort,created_at) SELECT 'all-'||q.symbol,'watchlist-all',q.symbol,'',1000,?1 FROM quote_daily q JOIN instruments i ON i.symbol=q.symbol JOIN quote_daily p ON p.symbol=q.symbol AND p.trade_date=(SELECT MIN(trade_date) FROM dates) WHERE q.trade_date=(SELECT MAX(trade_date) FROM dates) AND p.trade_date<q.trade_date AND q.source<>'demo' AND p.source<>'demo' AND p.close>0 AND q.volume>0 AND NOT EXISTS(SELECT 1 FROM trading_calendar c WHERE c.is_open=1 AND c.trade_date>p.trade_date AND c.trade_date<q.trade_date)",[now_iso()])?;
+    tx.execute(
+        "UPDATE watchlist_group SET name='全部样本' WHERE id='watchlist-all'",
+        [],
+    )?;
+    tx.execute(
+        "INSERT INTO app_setting(key,value) VALUES('sample.collection.v1','1')",
+        [],
+    )?;
+    tx.commit()
+}
 
 fn migrate_watchlist_collection(conn: &Connection) -> rusqlite::Result<()> {
     let tx = conn.unchecked_transaction()?;
@@ -356,7 +387,9 @@ fn migrate_watchlist_collection(conn: &Connection) -> rusqlite::Result<()> {
         "INSERT OR IGNORE INTO watchlist_item (id,group_id,symbol,note,sort,created_at)
          SELECT 'all-' || w.symbol, ?1, w.symbol, w.note, w.sort, w.created_at
          FROM watchlist_item w WHERE w.group_id <> ?1
-         ORDER BY w.created_at,w.sort,w.id", [WATCHLIST_ALL])?;
+         ORDER BY w.created_at,w.sort,w.id",
+        [WATCHLIST_ALL],
+    )?;
     tx.commit()
 }
 

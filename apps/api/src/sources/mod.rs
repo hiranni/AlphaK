@@ -1,3 +1,4 @@
+pub mod axdata;
 pub mod eastmoney;
 pub mod news;
 pub mod popularity;
@@ -19,6 +20,7 @@ const COOLDOWN_BASE_SECS: u64 = 15;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum SourceId {
+    AxData,
     Eastmoney,
     Tencent,
     Sina,
@@ -27,6 +29,7 @@ pub enum SourceId {
 impl SourceId {
     pub fn as_str(self) -> &'static str {
         match self {
+            Self::AxData => "axdata",
             Self::Eastmoney => "eastmoney",
             Self::Tencent => "tencent",
             Self::Sina => "sina",
@@ -35,6 +38,7 @@ impl SourceId {
 
     pub fn label(self) -> &'static str {
         match self {
+            Self::AxData => "AxData",
             Self::Eastmoney => "东方财富",
             Self::Tencent => "腾讯",
             Self::Sina => "新浪财经",
@@ -186,18 +190,45 @@ impl SourceHub {
     }
 
     pub fn priority(dataset: &str) -> &'static [SourceId] {
-        match dataset {
-            "quote_daily" | "snapshot" | "index_quote" => {
-                &[SourceId::Tencent, SourceId::Eastmoney, SourceId::Sina]
+        const WITH_AX: [SourceId; 4] = [
+            SourceId::AxData,
+            SourceId::Tencent,
+            SourceId::Eastmoney,
+            SourceId::Sina,
+        ];
+        const SNAPSHOT_WITH_AX: [SourceId; 4] = [
+            SourceId::Tencent,
+            SourceId::AxData,
+            SourceId::Eastmoney,
+            SourceId::Sina,
+        ];
+        const WITHOUT_AX: [SourceId; 3] = [SourceId::Tencent, SourceId::Eastmoney, SourceId::Sina];
+        if axdata::enabled() {
+            if dataset == "snapshot" {
+                &SNAPSHOT_WITH_AX
+            } else {
+                &WITH_AX
             }
-            _ => &[SourceId::Eastmoney, SourceId::Tencent, SourceId::Sina],
+        } else {
+            &WITHOUT_AX
         }
     }
 
     pub fn health(&self) -> Vec<HealthView> {
         let health = self.health.lock().unwrap();
-        [SourceId::Eastmoney, SourceId::Tencent, SourceId::Sina]
-            .into_iter()
+        let sources: &[SourceId] = if axdata::enabled() {
+            &[
+                SourceId::Eastmoney,
+                SourceId::Tencent,
+                SourceId::Sina,
+                SourceId::AxData,
+            ]
+        } else {
+            &[SourceId::Eastmoney, SourceId::Tencent, SourceId::Sina]
+        };
+        sources
+            .iter()
+            .copied()
             .map(|source| {
                 let entry = health.get(&source);
                 HealthView {
@@ -276,7 +307,17 @@ impl SourceHub {
                 continue;
             }
             for attempt in 1..=RETRIES {
-                match self.daily_from(*source, symbol, start, end, with_adj).await {
+                match self
+                    .daily_from(
+                        *source,
+                        symbol,
+                        start,
+                        end,
+                        with_adj,
+                        dataset == "index_quote",
+                    )
+                    .await
+                {
                     Ok((mut bars, adj_source, adj_error)) => {
                         bars.sort_by(|a, b| a.date.cmp(&b.date));
                         self.record_success(*source);
@@ -316,7 +357,17 @@ impl SourceHub {
     ) -> Result<SourceBatch<Vec<DailyBar>>, SourceFailure> {
         let mut errors = Vec::new();
         for attempt in 1..=RETRIES {
-            match self.daily_from(source, symbol, start, end, with_adj).await {
+            match self
+                .daily_from(
+                    source,
+                    symbol,
+                    start,
+                    end,
+                    with_adj,
+                    dataset == "index_quote",
+                )
+                .await
+            {
                 Ok((mut bars, adj_source, adj_error)) => {
                     bars.sort_by(|a, b| a.date.cmp(&b.date));
                     self.record_success(source);
@@ -356,6 +407,7 @@ impl SourceHub {
             }
             for attempt in 1..=RETRIES {
                 let result = match source {
+                    SourceId::AxData => axdata::snapshot(&self.client, symbol).await,
                     SourceId::Eastmoney => eastmoney::snapshot(&self.client, symbol).await,
                     SourceId::Tencent => tencent::snapshot(&self.client, symbol).await,
                     SourceId::Sina => sina::snapshot(&self.client, symbol).await,
@@ -395,8 +447,10 @@ impl SourceHub {
         start: &str,
         end: &str,
         with_adj: bool,
+        index: bool,
     ) -> Result<(Vec<DailyBar>, Option<SourceId>, Option<String>), String> {
         let mut bars = match source {
+            SourceId::AxData => axdata::daily(&self.client, symbol, start, end, "", index).await?,
             SourceId::Eastmoney => eastmoney::daily(&self.client, symbol, start, end, "").await?,
             SourceId::Tencent => tencent::daily(&self.client, symbol, start, end, "").await?,
             SourceId::Sina => sina::daily(&self.client, symbol, start, end).await?,
@@ -408,6 +462,7 @@ impl SourceHub {
             return Ok((bars, None, None));
         }
         let adjusted = match source {
+            SourceId::AxData => axdata::daily(&self.client, symbol, start, end, "qfq", index).await,
             SourceId::Eastmoney => eastmoney::daily(&self.client, symbol, start, end, "qfq").await,
             SourceId::Tencent => tencent::daily(&self.client, symbol, start, end, "qfq").await,
             SourceId::Sina => Err("新浪日线不提供复权因子".into()),
@@ -434,9 +489,21 @@ impl SourceHub {
 
     pub async fn probe_daily(&self, symbol: &str, start: &str, end: &str) -> Vec<ProbeResult> {
         let mut results = Vec::new();
-        for source in [SourceId::Eastmoney, SourceId::Tencent, SourceId::Sina] {
+        let sources: &[SourceId] = if axdata::enabled() {
+            &[
+                SourceId::AxData,
+                SourceId::Eastmoney,
+                SourceId::Tencent,
+                SourceId::Sina,
+            ]
+        } else {
+            &[SourceId::Eastmoney, SourceId::Tencent, SourceId::Sina]
+        };
+        for source in sources.iter().copied() {
             let started = Instant::now();
-            let result = self.daily_from(source, symbol, start, end, true).await;
+            let result = self
+                .daily_from(source, symbol, start, end, true, false)
+                .await;
             let elapsed_ms = started.elapsed().as_millis();
             match result {
                 Ok((data, _, error)) => results.push(ProbeResult {
@@ -462,8 +529,19 @@ impl SourceHub {
 
     pub async fn probe_snapshot(&self, symbol: &str) -> Vec<(SourceId, Result<Snapshot, String>)> {
         let mut results = Vec::new();
-        for source in [SourceId::Eastmoney, SourceId::Tencent, SourceId::Sina] {
+        let sources: &[SourceId] = if axdata::enabled() {
+            &[
+                SourceId::Eastmoney,
+                SourceId::Tencent,
+                SourceId::Sina,
+                SourceId::AxData,
+            ]
+        } else {
+            &[SourceId::Eastmoney, SourceId::Tencent, SourceId::Sina]
+        };
+        for source in sources.iter().copied() {
             let result = match source {
+                SourceId::AxData => axdata::snapshot(&self.client, symbol).await,
                 SourceId::Eastmoney => eastmoney::snapshot(&self.client, symbol).await,
                 SourceId::Tencent => tencent::snapshot(&self.client, symbol).await,
                 SourceId::Sina => sina::snapshot(&self.client, symbol).await,
